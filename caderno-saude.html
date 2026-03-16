@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caderno de Saúde</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --bg2: #141715;
+    --bg3: #1a1d1b;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8ede9;
+    --text2: #8a9b8c;
+    --text3: #5a6b5c;
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.12);
+    --green-border: rgba(74,222,128,0.25);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.12);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.12);
+    --red-border: rgba(248,113,113,0.25);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.12);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Layout */
+  .shell { max-width: 680px; margin: 0 auto; padding: 0 16px 80px; }
+
+  /* Header */
+  .header {
+    padding: 32px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .header h1 em { font-style: italic; color: var(--green); }
+  .header-sub { font-size: 12px; color: var(--text3); margin-top: 4px; font-family: 'DM Mono', monospace; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text3); flex-shrink: 0; margin-top: 8px;
+    transition: background .3s;
+  }
+  .status-dot.ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .status-dot.err { background: var(--red); }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+  .stat {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+  }
+  .stat-num { font-family: 'DM Serif Display', serif; font-size: 32px; line-height: 1; color: var(--text); }
+  .stat-num.danger { color: var(--red); }
+  .stat-label { font-size: 11px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--bg2); border-radius: var(--radius); padding: 4px; border: 1px solid var(--border); }
+  .tab {
+    flex: 1; padding: 7px; font-size: 12px; cursor: pointer; border: none;
+    background: none; color: var(--text2); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-weight: 400; transition: all .15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
+
+  /* Cards */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 8px;
+    cursor: pointer; transition: border-color .15s;
+  }
+  .card:hover { border-color: var(--border2); }
+  .card.form-card { cursor: default; }
+  .card.form-card:hover { border-color: var(--border); }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .card-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .card-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); white-space: nowrap; padding-top: 2px; }
+  .card-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .card-action { font-size: 12px; color: var(--text3); margin-top: 5px; }
+  .card-action::before { content: '→ '; }
+  .card-footer { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+  /* Badges */
+  .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    font-family: 'DM Mono', monospace; font-weight: 400;
+  }
+  .badge-red { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
+  .badge-amber { background: var(--amber-dim); color: var(--amber); }
+  .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); }
+  .badge-gray { background: rgba(255,255,255,0.05); color: var(--text3); border: 1px solid var(--border); }
+
+  /* Buttons */
+  .btn {
+    padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px;
+    cursor: pointer; border: 1px solid var(--border2); background: var(--bg3);
+    color: var(--text); font-family: 'DM Sans', sans-serif; transition: all .15s;
+  }
+  .btn:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); }
+  .btn-primary { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+  .btn-primary:hover { background: rgba(74,222,128,0.18); }
+  .btn-danger { background: var(--red-dim); color: var(--red); border-color: var(--red-border); font-size: 11px; padding: 3px 10px; }
+  .btn-sm { font-size: 11px; padding: 4px 10px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+
+  /* Form */
+  .fg { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .fg label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
+  .fg input, .fg select, .fg textarea {
+    padding: 8px 10px; border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    font-size: 13px; background: var(--bg3); color: var(--text);
+    font-family: 'DM Sans', sans-serif; width: 100%; transition: border-color .15s;
+  }
+  .fg input:focus, .fg select:focus, .fg textarea:focus {
+    outline: none; border-color: var(--green-border);
+  }
+  .fg select option { background: var(--bg3); }
+  .fg textarea { min-height: 72px; resize: vertical; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* Detail */
+  .detail-row {
+    display: flex; gap: 12px; padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key { font-size: 11px; color: var(--text3); min-width: 100px; flex-shrink: 0; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+  .detail-val { font-size: 13px; color: var(--text); line-height: 1.6; word-break: break-word; }
+
+  /* Import */
+  .import-area {
+    border: 1px dashed var(--border2); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 12px;
+  }
+  .import-area textarea {
+    width: 100%; min-height: 160px; padding: 10px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg3); color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    resize: vertical; transition: border-color .15s;
+  }
+  .import-area textarea:focus { outline: none; border-color: var(--green-border); }
+
+  /* Messages */
+  .msg { font-size: 12px; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 12px; line-height: 1.5; }
+  .msg-ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+  .msg-err { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
+  .msg-warn { background: var(--amber-dim); color: var(--amber); }
+
+  /* Filters */
+  .filter-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .fc {
+    font-size: 11px; padding: 4px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border); background: none; color: var(--text2);
+    font-family: 'DM Sans', sans-serif; transition: all .15s;
+  }
+  .fc:hover { color: var(--text); border-color: var(--border2); }
+  .fc.active { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+
+  /* Utils */
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 13px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; margin-top: 20px; }
+  .label:first-child { margin-top: 0; }
+  .mono-box {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--text2); white-space: pre-wrap; word-break: break-all;
+    max-height: 180px; overflow-y: auto; margin-top: 8px;
+  }
+  .debug-box {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px; margin-top: 10px;
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3);
+    white-space: pre-wrap;
+  }
+  .loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 13px; }
+  .loading::after { content: ''; animation: dots 1.2s infinite; }
+  @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>Caderno de <em>Saúde</em></h1>
+        <div class="header-sub">bernardo · diabetes & incidentes médicos</div>
+      </div>
+      <div class="status-dot" id="status-dot"></div>
+    </div>
+  </div>
+
+  <div id="msg-global"></div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="stat-total">—</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-mes">—</div>
+      <div class="stat-label">Este mês</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-graves">—</div>
+      <div class="stat-label">Graves</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('lista')">Incidentes</button>
+    <button class="tab" onclick="switchTab('importar')">Importar JSON</button>
+    <button class="tab" onclick="switchTab('exportar')">Exportar</button>
+  </div>
+
+  <!-- TAB: LISTA -->
+  <div id="tab-lista">
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="openForm()">+ Novo incidente</button>
+    </div>
+    <div id="form-container"></div>
+    <div class="filter-row">
+      <button class="fc active" onclick="setFilter(0, this)">Todos</button>
+      <button class="fc" onclick="setFilter(1, this)">Leve</button>
+      <button class="fc" onclick="setFilter(2, this)">Moderado</button>
+      <button class="fc" onclick="setFilter(3, this)">Grave</button>
+    </div>
+    <div id="list-container"></div>
+    <div id="detail-container"></div>
+  </div>
+
+  <!-- TAB: IMPORTAR -->
+  <div id="tab-importar" style="display:none">
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;">Cola aqui o JSON gerado pelo Claude. Aceita um objeto único ou um array.</p>
+    <div id="msg-import"></div>
+    <div class="import-area">
+      <textarea id="json-input" placeholder='{"id":"inc-...","date":"2026-03-16","type":"Hipoglicemia",...}'></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="doImport()">⬇ Importar do Claude</button>
+      <button class="btn" onclick="document.getElementById('json-input').value=''">Limpar</button>
+      <button class="btn" onclick="loadExample()">Ver exemplo</button>
+    </div>
+    <div id="debug-import"></div>
+    <div class="divider"></div>
+    <div class="label">formato esperado</div>
+    <div class="mono-box">{
+  "id": "inc-1742089800000",
+  "date": "2026-03-16",
+  "time": "03:30",
+  "type": "Hipoglicemia",
+  "typeCustom": "",
+  "severity": 3,
+  "sensorActive": false,
+  "symptoms": "Acordei com sensação de açúcares muito baixos",
+  "action": "Comi tudo o que estava à frente",
+  "recoveryTime": "~1 hora",
+  "notes": "Sensor tinha acabado na véspera."
+}</div>
+  </div>
+
+  <!-- TAB: EXPORTAR -->
+  <div id="tab-exportar" style="display:none">
+    <div class="label">exportar dados</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;">Exporta todos os incidentes em JSON para backup ou migração.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="doExport()">⬇ Descarregar JSON</button>
+      <button class="btn" onclick="loadAllForExport()">Atualizar listagem</button>
+    </div>
+    <div id="export-content"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://faehcnkslekyhewbsckc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZWhjbmtzbGVreWhld2JzY2tjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NTEyMTAsImV4cCI6MjA4OTIyNzIxMH0.1DJnrbs1v4qc7bRnpFR8cNdWyjAnqRZ_rKab3SS9a8U';
+const TABLE = 'medical_incidents';
+
+const TYPES = ["Hipoglicemia","Hiperglicemia","Dor aguda","Tontura/desmaio","Reação adversa","Crise de pressão","Problema cardíaco","Reação alérgica","Outro"];
+const SEV_LABEL = {1:"Leve", 2:"Moderado", 3:"Grave"};
+const SEV_BADGE = {1:"badge-green", 2:"badge-amber", 3:"badge-red"};
+const TYPE_BADGE = {
+  "Hipoglicemia":"badge-red","Hiperglicemia":"badge-amber",
+  "Dor aguda":"badge-red","Tontura/desmaio":"badge-amber",
+  "Reação adversa":"badge-amber","Crise de pressão":"badge-red",
+  "Problema cardíaco":"badge-red","Reação alérgica":"badge-amber","Outro":"badge-blue"
+};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let incidents = [];
+let currentFilter = 0;
+let showingDetail = null;
+let showingForm = false;
+
+// ─── SUPABASE API ─────────────────────────────────────────────────────────────
+const headers = {
+  'Content-Type': 'application/json',
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Prefer': 'return=representation'
+};
+
+function toRow(inc) {
+  return {
+    id: inc.id,
+    date: inc.date,
+    time: inc.time || null,
+    type: inc.type,
+    type_custom: inc.typeCustom || null,
+    severity: inc.severity,
+    sensor_active: inc.sensorActive === undefined ? null : inc.sensorActive,
+    symptoms: inc.symptoms || null,
+    action: inc.action || null,
+    recovery_time: inc.recoveryTime || null,
+    notes: inc.notes || null
+  };
+}
+
+function fromRow(row) {
+  return {
+    id: row.id,
+    date: row.date,
+    time: row.time || '',
+    type: row.type,
+    typeCustom: row.type_custom || '',
+    severity: row.severity,
+    sensorActive: row.sensor_active,
+    symptoms: row.symptoms || '',
+    action: row.action || '',
+    recoveryTime: row.recovery_time || '',
+    notes: row.notes || ''
+  };
+}
+
+async function apiGet(params='') {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?order=date.desc,time.desc${params}`, { headers });
+  if (!r.ok) throw new Error(await r.text());
+  return (await r.json()).map(fromRow);
+}
+
+async function apiUpsert(inc) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
+    method: 'POST',
+    headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(toRow(inc))
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return await r.json();
+}
+
+async function apiDelete(id) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE', headers
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+// ─── LOAD ─────────────────────────────────────────────────────────────────────
+async function loadAll() {
+  setStatus('loading');
+  try {
+    incidents = await apiGet();
+    setStatus('ok');
+    renderStats();
+    renderList();
+  } catch(e) {
+    setStatus('err');
+    showGlobalMsg('Erro a ligar ao Supabase: ' + e.message, false);
+  }
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function setStatus(s) {
+  const d = document.getElementById('status-dot');
+  d.className = 'status-dot' + (s === 'ok' ? ' ok' : s === 'err' ? ' err' : '');
+}
+
+function renderStats() {
+  document.getElementById('stat-total').textContent = incidents.length;
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const mes = incidents.filter(i => i.date && i.date.startsWith(ym)).length;
+  document.getElementById('stat-mes').textContent = mes;
+  const graves = incidents.filter(i => i.severity === 3).length;
+  const gEl = document.getElementById('stat-graves');
+  gEl.textContent = graves;
+  gEl.className = 'stat-num' + (graves > 0 ? ' danger' : '');
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  try { return new Date(d + 'T12:00').toLocaleDateString('pt-PT', {day:'2-digit',month:'2-digit',year:'numeric'}); }
+  catch { return d; }
+}
+
+function renderList() {
+  const lc = document.getElementById('list-container');
+  const dc = document.getElementById('detail-container');
+
+  if (showingDetail) {
+    lc.style.display = 'none';
+    dc.innerHTML = renderDetail(showingDetail);
+    dc.style.display = 'block';
+    return;
+  }
+
+  dc.style.display = 'none';
+  lc.style.display = 'block';
+
+  const filtered = currentFilter === 0 ? incidents : incidents.filter(i => i.severity === currentFilter);
+
+  if (!filtered.length) {
+    lc.innerHTML = `<div class="empty">${currentFilter === 0 ? 'Sem incidentes registados.' : 'Nenhum incidente com esta gravidade.'}</div>`;
+    return;
+  }
+
+  lc.innerHTML = filtered.map(inc => {
+    const label = inc.type === 'Outro' && inc.typeCustom ? inc.typeCustom : inc.type;
+    const sensorBadge = inc.sensorActive === true
+      ? '<span class="badge badge-blue">sensor ativo</span>'
+      : inc.sensorActive === false
+      ? '<span class="badge badge-gray">sem sensor</span>'
+      : '';
+    return `
+    <div class="card" onclick="openDetail('${inc.id}')">
+      <div class="card-top">
+        <div class="card-badges">
+          <span class="badge ${TYPE_BADGE[inc.type]||'badge-blue'}">${label}</span>
+          <span class="badge ${SEV_BADGE[inc.severity]}">${SEV_LABEL[inc.severity]}</span>
+          ${sensorBadge}
+        </div>
+        <span class="card-date">${fmtDate(inc.date)}${inc.time ? ' · ' + inc.time : ''}</span>
+      </div>
+      ${inc.symptoms ? `<div class="card-text">${inc.symptoms.slice(0,120)}${inc.symptoms.length>120?'…':''}</div>` : ''}
+      ${inc.action ? `<div class="card-action">${inc.action.slice(0,90)}${inc.action.length>90?'…':''}</div>` : ''}
+      <div class="card-footer" onclick="event.stopPropagation()">
+        <button class="btn btn-danger" onclick="deleteInc('${inc.id}')">apagar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDetail(id) {
+  const inc = incidents.find(i => i.id === id);
+  if (!inc) return '';
+  const label = inc.type === 'Outro' && inc.typeCustom ? inc.typeCustom : inc.type;
+  const rows = [
+    ['Data / Hora', `${fmtDate(inc.date)}${inc.time ? ' · ' + inc.time : ''}`],
+    ['Tipo', label],
+    ['Gravidade', SEV_LABEL[inc.severity]],
+    ['Sensor', inc.sensorActive === true ? 'Sim' : inc.sensorActive === false ? 'Não' : 'N/A'],
+    ['Sintomas', inc.symptoms || '—'],
+    ['Ação', inc.action || '—'],
+    ['Recuperação', inc.recoveryTime || '—'],
+    ['Notas', inc.notes || '—'],
+  ];
+  return `
+  <div class="card form-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="badge ${TYPE_BADGE[inc.type]||'badge-blue'}">${label}</span>
+        <span class="badge ${SEV_BADGE[inc.severity]}">${SEV_LABEL[inc.severity]}</span>
+      </div>
+      <button class="btn btn-sm" onclick="closeDetail()">← voltar</button>
+    </div>
+    ${rows.map(([k,v]) => `
+      <div class="detail-row">
+        <div class="detail-key">${k}</div>
+        <div class="detail-val">${v}</div>
+      </div>`).join('')}
+    <div class="label" style="margin-top:16px;">JSON</div>
+    <div class="mono-box">${JSON.stringify(inc, null, 2)}</div>
+  </div>`;
+}
+
+// ─── FORM ─────────────────────────────────────────────────────────────────────
+function openForm() {
+  showingForm = true;
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0,10);
+  const timeStr = now.toTimeString().slice(0,5);
+  document.getElementById('form-container').innerHTML = `
+  <div class="card form-card" style="margin-bottom:16px;">
+    <div style="font-size:15px;font-weight:500;margin-bottom:16px;">Novo incidente</div>
+    <div class="g2">
+      <div class="fg"><label>Data</label><input type="date" id="f-date" value="${dateStr}"></div>
+      <div class="fg"><label>Hora</label><input type="time" id="f-time" value="${timeStr}"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Tipo</label>
+        <select id="f-type" onchange="toggleCustom()">
+          ${TYPES.map(t => `<option value="${t}">${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label>Gravidade</label>
+        <select id="f-severity">
+          <option value="1">1 — Leve</option>
+          <option value="2">2 — Moderado</option>
+          <option value="3">3 — Grave</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" id="f-custom-wrap" style="display:none">
+      <label>Descrição do tipo</label>
+      <input type="text" id="f-type-custom" placeholder="Descreve o tipo de incidente">
+    </div>
+    <div class="fg"><label>Sensor ativo?</label>
+      <select id="f-sensor">
+        <option value="sim">Sim</option>
+        <option value="nao">Não</option>
+        <option value="na">N/A</option>
+      </select>
+    </div>
+    <div class="fg"><label>Sintomas</label><textarea id="f-symptoms" placeholder="O que sentiste?"></textarea></div>
+    <div class="fg"><label>Ação tomada</label><textarea id="f-action" placeholder="O que fizeste?"></textarea></div>
+    <div class="fg"><label>Tempo de recuperação</label><input type="text" id="f-recovery" placeholder="ex: 20 min"></div>
+    <div class="fg"><label>Notas</label><textarea id="f-notes"></textarea></div>
+    <div class="btn-row" style="margin-top:4px;margin-bottom:0;">
+      <button class="btn btn-primary" onclick="saveForm()">Guardar</button>
+      <button class="btn" onclick="closeForm()">Cancelar</button>
+    </div>
+  </div>`;
+}
+
+function toggleCustom() {
+  const t = document.getElementById('f-type').value;
+  document.getElementById('f-custom-wrap').style.display = t === 'Outro' ? 'flex' : 'none';
+}
+
+function closeForm() {
+  showingForm = false;
+  document.getElementById('form-container').innerHTML = '';
+}
+
+async function saveForm() {
+  const date = document.getElementById('f-date').value;
+  if (!date) { showGlobalMsg('Preenche a data.', false); return; }
+  const sa = document.getElementById('f-sensor').value;
+  const inc = {
+    id: 'inc-' + Date.now(),
+    date,
+    time: document.getElementById('f-time').value || '',
+    type: document.getElementById('f-type').value,
+    typeCustom: document.getElementById('f-type-custom')?.value || '',
+    severity: parseInt(document.getElementById('f-severity').value),
+    sensorActive: sa === 'na' ? null : sa === 'sim',
+    symptoms: document.getElementById('f-symptoms').value.trim(),
+    action: document.getElementById('f-action').value.trim(),
+    recoveryTime: document.getElementById('f-recovery').value.trim(),
+    notes: document.getElementById('f-notes').value.trim()
+  };
+  try {
+    await apiUpsert(inc);
+    closeForm();
+    await loadAll();
+    showGlobalMsg('Incidente guardado.', true);
+  } catch(e) {
+    showGlobalMsg('Erro ao guardar: ' + e.message, false);
+  }
+}
+
+// ─── DETAIL ───────────────────────────────────────────────────────────────────
+function openDetail(id) {
+  showingDetail = id;
+  renderList();
+}
+function closeDetail() {
+  showingDetail = null;
+  renderList();
+}
+
+// ─── DELETE ───────────────────────────────────────────────────────────────────
+async function deleteInc(id) {
+  if (!confirm('Apagar este incidente? Não pode ser desfeito.')) return;
+  try {
+    await apiDelete(id);
+    incidents = incidents.filter(i => i.id !== id);
+    renderStats();
+    renderList();
+    showGlobalMsg('Incidente apagado.', true);
+  } catch(e) {
+    showGlobalMsg('Erro ao apagar: ' + e.message, false);
+  }
+}
+
+// ─── IMPORT ───────────────────────────────────────────────────────────────────
+function parseIncidents(raw) {
+  let parsed;
+  try { parsed = JSON.parse(raw); }
+  catch(e) { throw new Error('JSON inválido: ' + e.message); }
+
+  let list = [];
+  if (Array.isArray(parsed)) list = parsed;
+  else if (parsed && typeof parsed === 'object') {
+    if (Array.isArray(parsed.incidentes)) list = parsed.incidentes;
+    else if (Array.isArray(parsed.incidents)) list = parsed.incidents;
+    else list = [parsed];
+  }
+
+  const valid = [], erros = [];
+  list.forEach((item, i) => {
+    if (!item || typeof item !== 'object') { erros.push(`item ${i}: não é objeto`); return; }
+    if (!item.date) { erros.push(`item ${i}: sem campo "date"`); return; }
+    if (!item.type) { erros.push(`item ${i}: sem campo "type"`); return; }
+    let sa = item.sensorActive;
+    if (sa === undefined || sa === null || sa === 'null') sa = null;
+    else if (sa === 'true' || sa === true) sa = true;
+    else if (sa === 'false' || sa === false) sa = false;
+    else sa = null;
+    valid.push({
+      id: item.id || ('inc-' + Date.now() + '-' + i),
+      date: item.date,
+      time: item.time || '',
+      type: TYPES.includes(item.type) ? item.type : 'Outro',
+      typeCustom: item.typeCustom || (!TYPES.includes(item.type) ? item.type : '') || '',
+      severity: [1,2,3].includes(parseInt(item.severity)) ? parseInt(item.severity) : 1,
+      sensorActive: sa,
+      symptoms: item.symptoms || '',
+      action: item.action || '',
+      recoveryTime: item.recoveryTime || '',
+      notes: item.notes || ''
+    });
+  });
+  return { valid, erros, total: list.length };
+}
+
+async function doImport() {
+  const raw = document.getElementById('json-input').value.trim();
+  const dbg = document.getElementById('debug-import');
+  const msgEl = document.getElementById('msg-import');
+  dbg.innerHTML = '';
+  msgEl.innerHTML = '';
+  if (!raw) { msgEl.innerHTML = '<div class="msg msg-err">Cola o JSON primeiro.</div>'; return; }
+  try {
+    const { valid, erros, total } = parseIncidents(raw);
+    let dbgText = `Total detetado: ${total}\nVálidos: ${valid.length}\nErros: ${erros.length}`;
+    if (erros.length) dbgText += '\n\n' + erros.join('\n');
+    dbg.innerHTML = `<div class="debug-box">${dbgText}</div>`;
+    if (!valid.length) {
+      msgEl.innerHTML = '<div class="msg msg-err">Nenhum registo válido. Ver detalhes acima.</div>';
+      return;
+    }
+    let saved = 0;
+    for (const inc of valid) {
+      try { await apiUpsert(inc); saved++; }
+      catch(e) { erros.push('Erro ao guardar ' + inc.id + ': ' + e.message); }
+    }
+    document.getElementById('json-input').value = '';
+    await loadAll();
+    msgEl.innerHTML = `<div class="msg msg-ok">${saved} registo(s) importado(s) com sucesso.${erros.length ? ' (' + erros.length + ' erro(s).)' : ''}</div>`;
+  } catch(e) {
+    msgEl.innerHTML = `<div class="msg msg-err">Erro: ${e.message}</div>`;
+  }
+}
+
+function loadExample() {
+  document.getElementById('json-input').value = JSON.stringify({
+    id: "inc-1742089800000",
+    date: "2026-03-16",
+    time: "03:30",
+    type: "Hipoglicemia",
+    typeCustom: "",
+    severity: 3,
+    sensorActive: false,
+    symptoms: "Acordei com sensação de açúcares muito baixos",
+    action: "Comi tudo o que estava à frente — estava muito aflito, não foi uma reação controlada",
+    recoveryTime: "~1 hora, depois consegui adormecer",
+    notes: "Sensor tinha acabado na véspera à noite. Único fator identificado."
+  }, null, 2);
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────────────────────
+async function loadAllForExport() {
+  const ec = document.getElementById('export-content');
+  ec.innerHTML = '<div class="loading">A carregar</div>';
+  try {
+    const all = await apiGet();
+    ec.innerHTML = `<div class="mono-box" style="max-height:300px">${JSON.stringify(all, null, 2)}</div>`;
+  } catch(e) {
+    ec.innerHTML = `<div class="msg msg-err">Erro: ${e.message}</div>`;
+  }
+}
+
+async function doExport() {
+  try {
+    const all = await apiGet();
+    const b = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'caderno-saude-bernardo.json';
+    a.click();
+  } catch(e) {
+    showGlobalMsg('Erro ao exportar: ' + e.message, false);
+  }
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  ['lista','importar','exportar'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((btn, i) => {
+    btn.classList.toggle('active', ['lista','importar','exportar'][i] === name);
+  });
+  if (name === 'exportar') loadAllForExport();
+}
+
+function setFilter(val, btn) {
+  currentFilter = val;
+  document.querySelectorAll('.fc').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function openDetail(id) { showingDetail = id; renderList(); }
+function closeDetail() { showingDetail = null; renderList(); }
+
+// ─── MESSAGES ─────────────────────────────────────────────────────────────────
+function showGlobalMsg(text, ok) {
+  const el = document.getElementById('msg-global');
+  el.innerHTML = `<div class="msg ${ok ? 'msg-ok' : 'msg-err'}">${text}</div>`;
+  setTimeout(() => el.innerHTML = '', 4000);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>
