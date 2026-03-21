@@ -3,755 +3,929 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Caderno de Saúde</title>
+<title>Caderno de Saúde · Bernardo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0d0f0e;
-    --bg2: #141715;
-    --bg3: #1a1d1b;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.12);
-    --text: #e8ede9;
-    --text2: #8a9b8c;
-    --text3: #5a6b5c;
-    --green: #4ade80;
-    --green-dim: rgba(74,222,128,0.12);
-    --green-border: rgba(74,222,128,0.25);
-    --amber: #fbbf24;
-    --amber-dim: rgba(251,191,36,0.12);
-    --red: #f87171;
-    --red-dim: rgba(248,113,113,0.12);
-    --red-border: rgba(248,113,113,0.25);
-    --blue: #60a5fa;
-    --blue-dim: rgba(96,165,250,0.12);
-    --radius: 10px;
-    --radius-sm: 6px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.6;
-  }
-
-  /* Layout */
-  .shell { max-width: 680px; margin: 0 auto; padding: 0 16px 80px; }
-
-  /* Header */
-  .header {
-    padding: 32px 0 24px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 24px;
-  }
-  .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  .header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 28px;
-    font-weight: 400;
-    color: var(--text);
-    letter-spacing: -0.5px;
-  }
-  .header h1 em { font-style: italic; color: var(--green); }
-  .header-sub { font-size: 12px; color: var(--text3); margin-top: 4px; font-family: 'DM Mono', monospace; }
-  .status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--text3); flex-shrink: 0; margin-top: 8px;
-    transition: background .3s;
-  }
-  .status-dot.ok { background: var(--green); box-shadow: 0 0 8px var(--green); }
-  .status-dot.err { background: var(--red); }
-
-  /* Stats */
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
-  .stat {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 14px 16px;
-  }
-  .stat-num { font-family: 'DM Serif Display', serif; font-size: 32px; line-height: 1; color: var(--text); }
-  .stat-num.danger { color: var(--red); }
-  .stat-label { font-size: 11px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
-
-  /* Tabs */
-  .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--bg2); border-radius: var(--radius); padding: 4px; border: 1px solid var(--border); }
-  .tab {
-    flex: 1; padding: 7px; font-size: 12px; cursor: pointer; border: none;
-    background: none; color: var(--text2); border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif; font-weight: 400; transition: all .15s;
-  }
-  .tab:hover { color: var(--text); }
-  .tab.active { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
-
-  /* Cards */
-  .card {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px; margin-bottom: 8px;
-    cursor: pointer; transition: border-color .15s;
-  }
-  .card:hover { border-color: var(--border2); }
-  .card.form-card { cursor: default; }
-  .card.form-card:hover { border-color: var(--border); }
-
-  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-  .card-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .card-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); white-space: nowrap; padding-top: 2px; }
-  .card-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
-  .card-action { font-size: 12px; color: var(--text3); margin-top: 5px; }
-  .card-action::before { content: '→ '; }
-  .card-footer { display: flex; justify-content: flex-end; margin-top: 10px; }
-
-  /* Badges */
-  .badge {
-    font-size: 11px; padding: 2px 8px; border-radius: 999px;
-    font-family: 'DM Mono', monospace; font-weight: 400;
-  }
-  .badge-red { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
-  .badge-amber { background: var(--amber-dim); color: var(--amber); }
-  .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
-  .badge-blue { background: var(--blue-dim); color: var(--blue); }
-  .badge-gray { background: rgba(255,255,255,0.05); color: var(--text3); border: 1px solid var(--border); }
-
-  /* Buttons */
-  .btn {
-    padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px;
-    cursor: pointer; border: 1px solid var(--border2); background: var(--bg3);
-    color: var(--text); font-family: 'DM Sans', sans-serif; transition: all .15s;
-  }
-  .btn:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); }
-  .btn-primary { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
-  .btn-primary:hover { background: rgba(74,222,128,0.18); }
-  .btn-danger { background: var(--red-dim); color: var(--red); border-color: var(--red-border); font-size: 11px; padding: 3px 10px; }
-  .btn-sm { font-size: 11px; padding: 4px 10px; }
-  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-
-  /* Form */
-  .fg { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-  .fg label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
-  .fg input, .fg select, .fg textarea {
-    padding: 8px 10px; border: 1px solid var(--border2); border-radius: var(--radius-sm);
-    font-size: 13px; background: var(--bg3); color: var(--text);
-    font-family: 'DM Sans', sans-serif; width: 100%; transition: border-color .15s;
-  }
-  .fg input:focus, .fg select:focus, .fg textarea:focus {
-    outline: none; border-color: var(--green-border);
-  }
-  .fg select option { background: var(--bg3); }
-  .fg textarea { min-height: 72px; resize: vertical; }
-  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-  /* Detail */
-  .detail-row {
-    display: flex; gap: 12px; padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .detail-row:last-child { border-bottom: none; }
-  .detail-key { font-size: 11px; color: var(--text3); min-width: 100px; flex-shrink: 0; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
-  .detail-val { font-size: 13px; color: var(--text); line-height: 1.6; word-break: break-word; }
-
-  /* Import */
-  .import-area {
-    border: 1px dashed var(--border2); border-radius: var(--radius);
-    padding: 16px; margin-bottom: 12px;
-  }
-  .import-area textarea {
-    width: 100%; min-height: 160px; padding: 10px;
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    background: var(--bg3); color: var(--text);
-    font-family: 'DM Mono', monospace; font-size: 11px;
-    resize: vertical; transition: border-color .15s;
-  }
-  .import-area textarea:focus { outline: none; border-color: var(--green-border); }
-
-  /* Messages */
-  .msg { font-size: 12px; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 12px; line-height: 1.5; }
-  .msg-ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
-  .msg-err { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
-  .msg-warn { background: var(--amber-dim); color: var(--amber); }
-
-  /* Filters */
-  .filter-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-  .fc {
-    font-size: 11px; padding: 4px 12px; border-radius: 999px; cursor: pointer;
-    border: 1px solid var(--border); background: none; color: var(--text2);
-    font-family: 'DM Sans', sans-serif; transition: all .15s;
-  }
-  .fc:hover { color: var(--text); border-color: var(--border2); }
-  .fc.active { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
-
-  /* Utils */
-  .empty { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 13px; }
-  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-  .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; margin-top: 20px; }
-  .label:first-child { margin-top: 0; }
-  .mono-box {
-    background: var(--bg3); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 12px;
-    font-family: 'DM Mono', monospace; font-size: 11px;
-    color: var(--text2); white-space: pre-wrap; word-break: break-all;
-    max-height: 180px; overflow-y: auto; margin-top: 8px;
-  }
-  .debug-box {
-    background: var(--bg3); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 10px; margin-top: 10px;
-    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3);
-    white-space: pre-wrap;
-  }
-  .loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 13px; }
-  .loading::after { content: ''; animation: dots 1.2s infinite; }
-  @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+:root{
+  --bg:#0d0f0e;--bg2:#141715;--bg3:#1a1d1b;--bg4:#1f2320;
+  --b:rgba(255,255,255,0.07);--b2:rgba(255,255,255,0.12);--b3:rgba(255,255,255,0.18);
+  --t:#e8ede9;--t2:#8a9b8c;--t3:#5a6b5c;
+  --g:#4ade80;--gd:rgba(74,222,128,0.1);--gb:rgba(74,222,128,0.25);
+  --a:#fbbf24;--ad:rgba(251,191,36,0.1);--ab:rgba(251,191,36,0.25);
+  --r:#f87171;--rd:rgba(248,113,113,0.1);--rb:rgba(248,113,113,0.25);
+  --bl:#60a5fa;--bld:rgba(96,165,250,0.1);--blb:rgba(96,165,250,0.25);
+  --pu:#a78bfa;--pud:rgba(167,139,250,0.1);--pub:rgba(167,139,250,0.25);
+  --radius:10px;--rs:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;font-size:14px;line-height:1.6}
+.shell{max-width:740px;margin:0 auto;padding:0 16px 100px}
+/* Header */
+.hdr{padding:28px 0 18px;border-bottom:1px solid var(--b);margin-bottom:18px}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.hdr h1{font-family:'DM Serif Display',serif;font-size:24px;font-weight:400;letter-spacing:-.5px}
+.hdr h1 em{font-style:italic;color:var(--g)}
+.hdr-sub{font-size:11px;color:var(--t3);margin-top:3px;font-family:'DM Mono',monospace}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--t3);flex-shrink:0;margin-top:8px;transition:background .3s}
+.dot.ok{background:var(--g);box-shadow:0 0 8px var(--g)}.dot.err{background:var(--r)}
+/* Nav */
+.nav{display:flex;gap:2px;margin-bottom:18px;background:var(--bg2);border-radius:var(--radius);padding:4px;border:1px solid var(--b);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.nb{flex-shrink:0;padding:6px 11px;font-size:12px;cursor:pointer;border:none;background:none;color:var(--t2);border-radius:var(--rs);font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
+.nb:hover{color:var(--t)}.nb.active{background:var(--bg3);color:var(--t);border:1px solid var(--b2)}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+@media(max-width:500px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--bg2);border:1px solid var(--b);border-radius:var(--radius);padding:11px 13px}
+.sn{font-family:'DM Serif Display',serif;font-size:26px;line-height:1}
+.sn.ok{color:var(--g)}.sn.warn{color:var(--a)}.sn.danger{color:var(--r)}
+.sl{font-size:10px;color:var(--t3);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--b);border-radius:var(--radius);padding:15px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.card:hover{border-color:var(--b2)}.card.s{cursor:default}.card.s:hover{border-color:var(--b)}
+.ct{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.cbs{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.cd{font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);white-space:nowrap}
+.cb{font-size:13px;color:var(--t2);line-height:1.5}
+.ca{font-size:12px;color:var(--t3);margin-top:4px}.ca::before{content:'→ '}
+.cf{display:flex;justify-content:flex-end;margin-top:9px;gap:6px}
+/* Badges */
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;font-family:'DM Mono',monospace}
+.br{background:var(--rd);color:var(--r);border:1px solid var(--rb)}
+.ba{background:var(--ad);color:var(--a);border:1px solid var(--ab)}
+.bg{background:var(--gd);color:var(--g);border:1px solid var(--gb)}
+.bb{background:var(--bld);color:var(--bl);border:1px solid var(--blb)}
+.bp{background:var(--pud);color:var(--pu);border:1px solid var(--pub)}
+.bz{background:rgba(255,255,255,0.04);color:var(--t3);border:1px solid var(--b)}
+/* Pills countdown */
+.pc{display:inline-flex;align-items:center;font-size:11px;padding:3px 10px;border-radius:999px;font-family:'DM Mono',monospace}
+.pc-a{background:var(--gd);color:var(--g);border:1px solid var(--gb)}
+.pc-w{background:var(--ad);color:var(--a);border:1px solid var(--ab)}
+.pc-e{background:rgba(255,255,255,0.04);color:var(--t3);border:1px solid var(--b)}
+/* Buttons */
+.btn{padding:7px 14px;border-radius:var(--rs);font-size:13px;cursor:pointer;border:1px solid var(--b2);background:var(--bg3);color:var(--t);font-family:'DM Sans',sans-serif;transition:all .15s}
+.btn:hover{border-color:var(--b3);background:rgba(255,255,255,0.05)}
+.btn-p{background:var(--gd);color:var(--g);border-color:var(--gb)}.btn-p:hover{background:rgba(74,222,128,0.16)}
+.btn-d{background:var(--rd);color:var(--r);border-color:var(--rb);font-size:11px;padding:3px 10px}
+.btn-s{font-size:11px;padding:4px 10px}
+.btn-b{background:var(--bld);color:var(--bl);border-color:var(--blb)}
+.brow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+/* Form */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+.fg label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.fg input,.fg select,.fg textarea{padding:8px 10px;border:1px solid var(--b2);border-radius:var(--rs);font-size:13px;background:var(--bg3);color:var(--t);font-family:'DM Sans',sans-serif;width:100%;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--gb)}
+.fg select option{background:var(--bg3)}.fg textarea{min-height:64px;resize:vertical}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:500px){.g2,.g3{grid-template-columns:1fr}}
+/* Detail rows */
+.dr{display:flex;gap:12px;padding:7px 0;border-bottom:1px solid var(--b)}
+.dr:last-child{border-bottom:none}
+.dk{font-size:11px;color:var(--t3);min-width:120px;flex-shrink:0;text-transform:uppercase;letter-spacing:.06em;padding-top:2px}
+.dv{font-size:13px;line-height:1.6;word-break:break-word}
+/* Messages */
+.msg{font-size:12px;padding:8px 12px;border-radius:var(--rs);margin-bottom:12px;line-height:1.5}
+.msg-ok{background:var(--gd);color:var(--g);border:1px solid var(--gb)}
+.msg-err{background:var(--rd);color:var(--r);border:1px solid var(--rb)}
+.msg-warn{background:var(--ad);color:var(--a);border:1px solid var(--ab)}
+/* Filters */
+.fr{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.fc{font-size:11px;padding:4px 12px;border-radius:999px;cursor:pointer;border:1px solid var(--b);background:none;color:var(--t2);font-family:'DM Sans',sans-serif;transition:all .15s}
+.fc:hover{color:var(--t);border-color:var(--b2)}.fc.active{background:var(--gd);color:var(--g);border-color:var(--gb)}
+/* Utils */
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--t3);font-size:13px}
+.divider{border:none;border-top:1px solid var(--b);margin:14px 0}
+.lbl{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;margin-top:18px}
+.lbl:first-child{margin-top:0}
+.mono{background:var(--bg3);border:1px solid var(--b);border-radius:var(--rs);padding:11px;font-family:'DM Mono',monospace;font-size:11px;color:var(--t2);white-space:pre-wrap;word-break:break-all;max-height:220px;overflow-y:auto}
+.dbg{background:var(--bg3);border:1px solid var(--b);border-radius:var(--rs);padding:10px;margin-top:10px;font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);white-space:pre-wrap;max-height:180px;overflow-y:auto}
+.banner{border-radius:var(--radius);padding:11px 15px;margin-bottom:14px;font-size:13px;display:flex;gap:10px;align-items:center}
+.banner-warn{background:var(--ad);border:1px solid var(--ab);color:var(--a)}
+.banner-info{background:var(--bld);border:1px solid var(--blb);color:var(--bl)}
+.section-head{font-family:'DM Serif Display',serif;font-size:17px;font-weight:400;color:var(--t2);margin-bottom:12px}
+/* Summary table */
+.stbl{width:100%;border-collapse:collapse;font-size:12px}
+.stbl th{text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);border-bottom:1px solid var(--b);font-weight:400}
+.stbl td{padding:7px 8px;border-bottom:1px solid var(--b);color:var(--t2);vertical-align:top}
+.stbl tr:last-child td{border-bottom:none}
+.stbl tr:hover td{background:rgba(255,255,255,0.02)}
 </style>
 </head>
 <body>
 <div class="shell">
-
-  <div class="header">
-    <div class="header-top">
+  <div class="hdr">
+    <div class="hdr-top">
       <div>
         <h1>Caderno de <em>Saúde</em></h1>
-        <div class="header-sub">bernardo · diabetes & incidentes médicos</div>
+        <div class="hdr-sub">bernardo · diabetes tipo 1 · medtronic 780g</div>
       </div>
-      <div class="status-dot" id="status-dot"></div>
+      <div class="dot" id="dot"></div>
     </div>
   </div>
-
-  <div id="msg-global"></div>
-
+  <div id="msg-g"></div>
+  <div id="banners"></div>
   <div class="stats">
-    <div class="stat">
-      <div class="stat-num" id="stat-total">—</div>
-      <div class="stat-label">Total</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num" id="stat-mes">—</div>
-      <div class="stat-label">Este mês</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num" id="stat-graves">—</div>
-      <div class="stat-label">Graves</div>
-    </div>
+    <div class="stat"><div class="sn" id="s-inc">—</div><div class="sl">Incidentes</div></div>
+    <div class="stat"><div class="sn" id="s-glu">—</div><div class="sl">Glicemia</div></div>
+    <div class="stat"><div class="sn" id="s-med">—</div><div class="sl">Medicação</div></div>
+    <div class="stat"><div class="sn" id="s-hba">—</div><div class="sl">HbA1c</div></div>
   </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('lista')">Incidentes</button>
-    <button class="tab" onclick="switchTab('importar')">Importar JSON</button>
-    <button class="tab" onclick="switchTab('exportar')">Exportar</button>
+  <div class="nav">
+    <button class="nb active" onclick="goTab('dashboard')">Dashboard</button>
+    <button class="nb" onclick="goTab('incidentes')">Incidentes</button>
+    <button class="nb" onclick="goTab('glicemia')">Glicemia</button>
+    <button class="nb" onclick="goTab('episodios')">Episódios</button>
+    <button class="nb" onclick="goTab('historico')">Historial</button>
+    <button class="nb" onclick="goTab('equipamento')">Equipamento</button>
+    <button class="nb" onclick="goTab('consultas')">Consultas</button>
+    <button class="nb" onclick="goTab('medicacao')">Medicação</button>
+    <button class="nb" onclick="goTab('perfil')">Perfil</button>
+    <button class="nb" onclick="goTab('importar')">Importar</button>
+    <button class="nb" onclick="goTab('exportar')">Exportar</button>
   </div>
-
-  <!-- TAB: LISTA -->
-  <div id="tab-lista">
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="openForm()">+ Novo incidente</button>
-    </div>
-    <div id="form-container"></div>
-    <div class="filter-row">
-      <button class="fc active" onclick="setFilter(0, this)">Todos</button>
-      <button class="fc" onclick="setFilter(1, this)">Leve</button>
-      <button class="fc" onclick="setFilter(2, this)">Moderado</button>
-      <button class="fc" onclick="setFilter(3, this)">Grave</button>
-    </div>
-    <div id="list-container"></div>
-    <div id="detail-container"></div>
-  </div>
-
-  <!-- TAB: IMPORTAR -->
-  <div id="tab-importar" style="display:none">
-    <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;">Cola aqui o JSON gerado pelo Claude. Aceita um objeto único ou um array.</p>
-    <div id="msg-import"></div>
-    <div class="import-area">
-      <textarea id="json-input" placeholder='{"id":"inc-...","date":"2026-03-16","type":"Hipoglicemia",...}'></textarea>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="doImport()">⬇ Importar do Claude</button>
-      <button class="btn" onclick="document.getElementById('json-input').value=''">Limpar</button>
-      <button class="btn" onclick="loadExample()">Ver exemplo</button>
-    </div>
-    <div id="debug-import"></div>
-    <div class="divider"></div>
-    <div class="label">formato esperado</div>
-    <div class="mono-box">{
-  "id": "inc-1742089800000",
-  "date": "2026-03-16",
-  "time": "03:30",
-  "type": "Hipoglicemia",
-  "typeCustom": "",
-  "severity": 3,
-  "sensorActive": false,
-  "symptoms": "Acordei com sensação de açúcares muito baixos",
-  "action": "Comi tudo o que estava à frente",
-  "recoveryTime": "~1 hora",
-  "notes": "Sensor tinha acabado na véspera."
-}</div>
-  </div>
-
-  <!-- TAB: EXPORTAR -->
-  <div id="tab-exportar" style="display:none">
-    <div class="label">exportar dados</div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;">Exporta todos os incidentes em JSON para backup ou migração.</p>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="doExport()">⬇ Descarregar JSON</button>
-      <button class="btn" onclick="loadAllForExport()">Atualizar listagem</button>
-    </div>
-    <div id="export-content"></div>
-  </div>
-
+  <div id="tab-dashboard"></div>
+  <div id="tab-incidentes" style="display:none"></div>
+  <div id="tab-glicemia" style="display:none"></div>
+  <div id="tab-episodios" style="display:none"></div>
+  <div id="tab-historico" style="display:none"></div>
+  <div id="tab-equipamento" style="display:none"></div>
+  <div id="tab-consultas" style="display:none"></div>
+  <div id="tab-medicacao" style="display:none"></div>
+  <div id="tab-perfil" style="display:none"></div>
+  <div id="tab-importar" style="display:none"></div>
+  <div id="tab-exportar" style="display:none"></div>
 </div>
 
 <script>
-// ─── CONFIG ──────────────────────────────────────────────────────────────────
-const SUPABASE_URL = 'https://faehcnkslekyhewbsckc.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZWhjbmtzbGVreWhld2JzY2tjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NTEyMTAsImV4cCI6MjA4OTIyNzIxMH0.1DJnrbs1v4qc7bRnpFR8cNdWyjAnqRZ_rKab3SS9a8U';
-const TABLE = 'medical_incidents';
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const SB='https://faehcnkslekyhewbsckc.supabase.co';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhZWhjbmtzbGVreWhld2JzY2tjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NTEyMTAsImV4cCI6MjA4OTIyNzIxMH0.1DJnrbs1v4qc7bRnpFR8cNdWyjAnqRZ_rKab3SS9a8U';
+const H={'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+SK,'Prefer':'return=representation'};
+const HU={...H,'Prefer':'resolution=merge-duplicates,return=representation'};
 
-const TYPES = ["Hipoglicemia","Hiperglicemia","Dor aguda","Tontura/desmaio","Reação adversa","Crise de pressão","Problema cardíaco","Reação alérgica","Outro"];
-const SEV_LABEL = {1:"Leve", 2:"Moderado", 3:"Grave"};
-const SEV_BADGE = {1:"badge-green", 2:"badge-amber", 3:"badge-red"};
-const TYPE_BADGE = {
-  "Hipoglicemia":"badge-red","Hiperglicemia":"badge-amber",
-  "Dor aguda":"badge-red","Tontura/desmaio":"badge-amber",
-  "Reação adversa":"badge-amber","Crise de pressão":"badge-red",
-  "Problema cardíaco":"badge-red","Reação alérgica":"badge-amber","Outro":"badge-blue"
-};
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const ITYPES=["Hipoglicemia","Hiperglicemia","Dor aguda","Tontura/desmaio","Reação adversa","Crise de pressão","Problema cardíaco","Reação alérgica","Outro"];
+const SEVL={1:"Leve",2:"Moderado",3:"Grave"};
+const SEVB={1:"bg",2:"ba",3:"br"};
+const TYPB={"Hipoglicemia":"br","Hiperglicemia":"ba","Dor aguda":"br","Tontura/desmaio":"ba","Reação adversa":"ba","Crise de pressão":"br","Problema cardíaco":"br","Reação alérgica":"ba","Outro":"bb"};
+const LAST_BACKUP_KEY='caderno_last_backup';
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
-let incidents = [];
-let currentFilter = 0;
-let showingDetail = null;
-let showingForm = false;
+let DB={incidents:[],glucose:[],equipment:[],appointments:[],med_base:[],med_temp:[],episodes:[],history:[],profile:null};
+let curTab='dashboard',detId=null,formOpen=null,incF=0,sumMode=20;
 
-// ─── SUPABASE API ─────────────────────────────────────────────────────────────
-const headers = {
-  'Content-Type': 'application/json',
-  'apikey': SUPABASE_KEY,
-  'Authorization': 'Bearer ' + SUPABASE_KEY,
-  'Prefer': 'return=representation'
-};
-
-function toRow(inc) {
-  return {
-    id: inc.id,
-    date: inc.date,
-    time: inc.time || null,
-    type: inc.type,
-    type_custom: inc.typeCustom || null,
-    severity: inc.severity,
-    sensor_active: inc.sensorActive === undefined ? null : inc.sensorActive,
-    symptoms: inc.symptoms || null,
-    action: inc.action || null,
-    recovery_time: inc.recoveryTime || null,
-    notes: inc.notes || null
-  };
+// ─── API ──────────────────────────────────────────────────────────────────────
+async function sbGet(t,o='created_at.desc',extra=''){
+  const r=await fetch(`${SB}/rest/v1/${t}?order=${o}${extra}`,{headers:H});
+  if(!r.ok)throw new Error(await r.text());
+  return r.json();
+}
+async function sbUp(t,d){
+  const r=await fetch(`${SB}/rest/v1/${t}`,{method:'POST',headers:HU,body:JSON.stringify(d)});
+  if(!r.ok)throw new Error(await r.text());
+  return r.json();
+}
+async function sbPatch(t,id,d){
+  const r=await fetch(`${SB}/rest/v1/${t}?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',headers:HU,body:JSON.stringify(d)});
+  if(!r.ok)throw new Error(await r.text());
+}
+async function sbDel(t,id){
+  const r=await fetch(`${SB}/rest/v1/${t}?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',headers:H});
+  if(!r.ok)throw new Error(await r.text());
 }
 
-function fromRow(row) {
-  return {
-    id: row.id,
-    date: row.date,
-    time: row.time || '',
-    type: row.type,
-    typeCustom: row.type_custom || '',
-    severity: row.severity,
-    sensorActive: row.sensor_active,
-    symptoms: row.symptoms || '',
-    action: row.action || '',
-    recoveryTime: row.recovery_time || '',
-    notes: row.notes || ''
-  };
-}
+// ─── ROW MAPS ─────────────────────────────────────────────────────────────────
+function toIR(i){return{id:i.id,date:i.date,time:i.time||null,end_date:i.endDate||null,end_time:i.endTime||null,type:i.type,type_custom:i.typeCustom||null,severity:i.severity,sensor_active:i.sensorActive??null,glucose_at_event:i.glucoseAtEvent||null,ketones:i.ketones||null,location:i.location||null,trigger:i.trigger||null,sick_day:i.sickDay||false,symptoms:i.symptoms||null,action:i.action||null,recovery_time:i.recoveryTime||null,medication_note:i.medicationNote||null,notes:i.notes||null};}
+function fromIR(r){return{id:r.id,date:r.date,time:r.time||'',endDate:r.end_date||'',endTime:r.end_time||'',type:r.type,typeCustom:r.type_custom||'',severity:r.severity,sensorActive:r.sensor_active,glucoseAtEvent:r.glucose_at_event,ketones:r.ketones||'',location:r.location||'',trigger:r.trigger||'',sickDay:r.sick_day||false,symptoms:r.symptoms||'',action:r.action||'',recoveryTime:r.recovery_time||'',medicationNote:r.medication_note||'',notes:r.notes||''};}
 
-async function apiGet(params='') {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?order=date.desc,time.desc${params}`, { headers });
-  if (!r.ok) throw new Error(await r.text());
-  return (await r.json()).map(fromRow);
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function uid(p='id'){return p+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,5);}
+function today(){return new Date().toISOString().slice(0,10);}
+function nowT(){return new Date().toTimeString().slice(0,5);}
+function fmtD(d){if(!d)return'';try{return new Date(d+'T12:00').toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return d;}}
+function fmtDT(d){if(!d)return'';try{return new Date(d).toLocaleString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch{return d;}}
+function gc(v){if(!v&&v!==0)return'';if(v<70)return'danger';if(v>180)return'warn';return'ok';}
+function gb(v){if(!v&&v!==0)return'bz';if(v<70)return'br';if(v>180)return'ba';return'bg';}
+function dl(e){if(!e)return null;return Math.ceil((new Date(e+' 23:59')-new Date())/86400000);}
+function duration(d1,t1,d2,t2){
+  if(!d1)return'';
+  if(!d2)return'';
+  const a=new Date((d1+(t1?' '+t1:' 00:00')));
+  const b=new Date((d2+(t2?' '+t2:' 00:00')));
+  const diff=b-a;
+  if(diff<0)return'';
+  const h=Math.floor(diff/3600000);
+  const days=Math.floor(diff/86400000);
+  if(days>=1)return days+' dia'+(days!==1?'s':'');
+  if(h>=1)return h+' hora'+(h!==1?'s':'');
+  return Math.floor(diff/60000)+' min';
 }
-
-async function apiUpsert(inc) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
-    method: 'POST',
-    headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify(toRow(inc))
-  });
-  if (!r.ok) throw new Error(await r.text());
-  return await r.json();
-}
-
-async function apiDelete(id) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
-    method: 'DELETE', headers
-  });
-  if (!r.ok) throw new Error(await r.text());
-}
+function setDot(s){const d=document.getElementById('dot');d.className='dot'+(s==='ok'?' ok':s==='err'?' err':'');}
+function flash(t,tp='ok'){const e=document.getElementById('msg-g');e.innerHTML=`<div class="msg msg-${tp}">${t}</div>`;setTimeout(()=>e.innerHTML='',4000);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ─── LOAD ─────────────────────────────────────────────────────────────────────
-async function loadAll() {
-  setStatus('loading');
-  try {
-    incidents = await apiGet();
-    setStatus('ok');
-    renderStats();
-    renderList();
-  } catch(e) {
-    setStatus('err');
-    showGlobalMsg('Erro a ligar ao Supabase: ' + e.message, false);
+async function loadAll(){
+  setDot('loading');
+  try{
+    const[inc,glu,eqp,apt,mb,mt,ep,hist,prof]=await Promise.all([
+      sbGet('medical_incidents','date.desc,time.desc'),
+      sbGet('glucose_readings','datetime.desc'),
+      sbGet('equipment_log','date.desc,time.desc'),
+      sbGet('medical_appointments','date.desc'),
+      sbGet('medications_baseline','created_at.desc'),
+      sbGet('medications_temporary','start_date.desc'),
+      sbGet('hospital_episodes','date_in.desc'),
+      sbGet('medical_history','date.desc'),
+      sbGet('medical_profile','updated_at.desc'),
+    ]);
+    DB.incidents=inc.map(fromIR);
+    DB.glucose=glu;DB.equipment=eqp;DB.appointments=apt;
+    DB.med_base=mb;DB.med_temp=mt;DB.episodes=ep;DB.history=hist;
+    DB.profile=prof[0]||null;
+    setDot('ok');
+    renderStats();renderBanners();renderCurrent();
+  }catch(e){setDot('err');flash('Erro Supabase: '+e.message,'err');}
+}
+
+function renderStats(){
+  document.getElementById('s-inc').textContent=DB.incidents.length;
+  const lg=DB.glucose[0];const ge=document.getElementById('s-glu');
+  if(lg){ge.textContent=lg.value_mgdl;ge.className='sn '+gc(lg.value_mgdl);}
+  else{ge.textContent='—';ge.className='sn';}
+  const am=DB.med_temp.filter(m=>{const d=dl(m.end_date);return d===null||d>=0;}).length;
+  document.getElementById('s-med').textContent=am||'—';
+  const la=DB.appointments.find(a=>a.hba1c);
+  document.getElementById('s-hba').textContent=la?la.hba1c+'%':'—';
+}
+
+function renderBanners(){
+  const el=document.getElementById('banners');
+  const parts=[];
+  // Sick day
+  if(DB.incidents.find(i=>i.sickDay&&i.date===today())){
+    parts.push(`<div class="banner banner-warn">⚠ Sick day ativo hoje — resistência à insulina aumentada. Verifica basal.</div>`);
   }
-}
-
-// ─── RENDER ───────────────────────────────────────────────────────────────────
-function setStatus(s) {
-  const d = document.getElementById('status-dot');
-  d.className = 'status-dot' + (s === 'ok' ? ' ok' : s === 'err' ? ' err' : '');
-}
-
-function renderStats() {
-  document.getElementById('stat-total').textContent = incidents.length;
-  const now = new Date();
-  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const mes = incidents.filter(i => i.date && i.date.startsWith(ym)).length;
-  document.getElementById('stat-mes').textContent = mes;
-  const graves = incidents.filter(i => i.severity === 3).length;
-  const gEl = document.getElementById('stat-graves');
-  gEl.textContent = graves;
-  gEl.className = 'stat-num' + (graves > 0 ? ' danger' : '');
-}
-
-function fmtDate(d) {
-  if (!d) return '';
-  try { return new Date(d + 'T12:00').toLocaleDateString('pt-PT', {day:'2-digit',month:'2-digit',year:'numeric'}); }
-  catch { return d; }
-}
-
-function renderList() {
-  const lc = document.getElementById('list-container');
-  const dc = document.getElementById('detail-container');
-
-  if (showingDetail) {
-    lc.style.display = 'none';
-    dc.innerHTML = renderDetail(showingDetail);
-    dc.style.display = 'block';
-    return;
-  }
-
-  dc.style.display = 'none';
-  lc.style.display = 'block';
-
-  const filtered = currentFilter === 0 ? incidents : incidents.filter(i => i.severity === currentFilter);
-
-  if (!filtered.length) {
-    lc.innerHTML = `<div class="empty">${currentFilter === 0 ? 'Sem incidentes registados.' : 'Nenhum incidente com esta gravidade.'}</div>`;
-    return;
-  }
-
-  lc.innerHTML = filtered.map(inc => {
-    const label = inc.type === 'Outro' && inc.typeCustom ? inc.typeCustom : inc.type;
-    const sensorBadge = inc.sensorActive === true
-      ? '<span class="badge badge-blue">sensor ativo</span>'
-      : inc.sensorActive === false
-      ? '<span class="badge badge-gray">sem sensor</span>'
-      : '';
-    return `
-    <div class="card" onclick="openDetail('${inc.id}')">
-      <div class="card-top">
-        <div class="card-badges">
-          <span class="badge ${TYPE_BADGE[inc.type]||'badge-blue'}">${label}</span>
-          <span class="badge ${SEV_BADGE[inc.severity]}">${SEV_LABEL[inc.severity]}</span>
-          ${sensorBadge}
-        </div>
-        <span class="card-date">${fmtDate(inc.date)}${inc.time ? ' · ' + inc.time : ''}</span>
-      </div>
-      ${inc.symptoms ? `<div class="card-text">${inc.symptoms.slice(0,120)}${inc.symptoms.length>120?'…':''}</div>` : ''}
-      ${inc.action ? `<div class="card-action">${inc.action.slice(0,90)}${inc.action.length>90?'…':''}</div>` : ''}
-      <div class="card-footer" onclick="event.stopPropagation()">
-        <button class="btn btn-danger" onclick="deleteInc('${inc.id}')">apagar</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderDetail(id) {
-  const inc = incidents.find(i => i.id === id);
-  if (!inc) return '';
-  const label = inc.type === 'Outro' && inc.typeCustom ? inc.typeCustom : inc.type;
-  const rows = [
-    ['Data / Hora', `${fmtDate(inc.date)}${inc.time ? ' · ' + inc.time : ''}`],
-    ['Tipo', label],
-    ['Gravidade', SEV_LABEL[inc.severity]],
-    ['Sensor', inc.sensorActive === true ? 'Sim' : inc.sensorActive === false ? 'Não' : 'N/A'],
-    ['Sintomas', inc.symptoms || '—'],
-    ['Ação', inc.action || '—'],
-    ['Recuperação', inc.recoveryTime || '—'],
-    ['Notas', inc.notes || '—'],
-  ];
-  return `
-  <div class="card form-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <span class="badge ${TYPE_BADGE[inc.type]||'badge-blue'}">${label}</span>
-        <span class="badge ${SEV_BADGE[inc.severity]}">${SEV_LABEL[inc.severity]}</span>
-      </div>
-      <button class="btn btn-sm" onclick="closeDetail()">← voltar</button>
-    </div>
-    ${rows.map(([k,v]) => `
-      <div class="detail-row">
-        <div class="detail-key">${k}</div>
-        <div class="detail-val">${v}</div>
-      </div>`).join('')}
-    <div class="label" style="margin-top:16px;">JSON</div>
-    <div class="mono-box">${JSON.stringify(inc, null, 2)}</div>
-  </div>`;
-}
-
-// ─── FORM ─────────────────────────────────────────────────────────────────────
-function openForm() {
-  showingForm = true;
-  const now = new Date();
-  const dateStr = now.toISOString().slice(0,10);
-  const timeStr = now.toTimeString().slice(0,5);
-  document.getElementById('form-container').innerHTML = `
-  <div class="card form-card" style="margin-bottom:16px;">
-    <div style="font-size:15px;font-weight:500;margin-bottom:16px;">Novo incidente</div>
-    <div class="g2">
-      <div class="fg"><label>Data</label><input type="date" id="f-date" value="${dateStr}"></div>
-      <div class="fg"><label>Hora</label><input type="time" id="f-time" value="${timeStr}"></div>
-    </div>
-    <div class="g2">
-      <div class="fg"><label>Tipo</label>
-        <select id="f-type" onchange="toggleCustom()">
-          ${TYPES.map(t => `<option value="${t}">${t}</option>`).join('')}
-        </select>
-      </div>
-      <div class="fg"><label>Gravidade</label>
-        <select id="f-severity">
-          <option value="1">1 — Leve</option>
-          <option value="2">2 — Moderado</option>
-          <option value="3">3 — Grave</option>
-        </select>
-      </div>
-    </div>
-    <div class="fg" id="f-custom-wrap" style="display:none">
-      <label>Descrição do tipo</label>
-      <input type="text" id="f-type-custom" placeholder="Descreve o tipo de incidente">
-    </div>
-    <div class="fg"><label>Sensor ativo?</label>
-      <select id="f-sensor">
-        <option value="sim">Sim</option>
-        <option value="nao">Não</option>
-        <option value="na">N/A</option>
-      </select>
-    </div>
-    <div class="fg"><label>Sintomas</label><textarea id="f-symptoms" placeholder="O que sentiste?"></textarea></div>
-    <div class="fg"><label>Ação tomada</label><textarea id="f-action" placeholder="O que fizeste?"></textarea></div>
-    <div class="fg"><label>Tempo de recuperação</label><input type="text" id="f-recovery" placeholder="ex: 20 min"></div>
-    <div class="fg"><label>Notas</label><textarea id="f-notes"></textarea></div>
-    <div class="btn-row" style="margin-top:4px;margin-bottom:0;">
-      <button class="btn btn-primary" onclick="saveForm()">Guardar</button>
-      <button class="btn" onclick="closeForm()">Cancelar</button>
-    </div>
-  </div>`;
-}
-
-function toggleCustom() {
-  const t = document.getElementById('f-type').value;
-  document.getElementById('f-custom-wrap').style.display = t === 'Outro' ? 'flex' : 'none';
-}
-
-function closeForm() {
-  showingForm = false;
-  document.getElementById('form-container').innerHTML = '';
-}
-
-async function saveForm() {
-  const date = document.getElementById('f-date').value;
-  if (!date) { showGlobalMsg('Preenche a data.', false); return; }
-  const sa = document.getElementById('f-sensor').value;
-  const inc = {
-    id: 'inc-' + Date.now(),
-    date,
-    time: document.getElementById('f-time').value || '',
-    type: document.getElementById('f-type').value,
-    typeCustom: document.getElementById('f-type-custom')?.value || '',
-    severity: parseInt(document.getElementById('f-severity').value),
-    sensorActive: sa === 'na' ? null : sa === 'sim',
-    symptoms: document.getElementById('f-symptoms').value.trim(),
-    action: document.getElementById('f-action').value.trim(),
-    recoveryTime: document.getElementById('f-recovery').value.trim(),
-    notes: document.getElementById('f-notes').value.trim()
-  };
-  try {
-    await apiUpsert(inc);
-    closeForm();
-    await loadAll();
-    showGlobalMsg('Incidente guardado.', true);
-  } catch(e) {
-    showGlobalMsg('Erro ao guardar: ' + e.message, false);
-  }
-}
-
-// ─── DETAIL ───────────────────────────────────────────────────────────────────
-function openDetail(id) {
-  showingDetail = id;
-  renderList();
-}
-function closeDetail() {
-  showingDetail = null;
-  renderList();
-}
-
-// ─── DELETE ───────────────────────────────────────────────────────────────────
-async function deleteInc(id) {
-  if (!confirm('Apagar este incidente? Não pode ser desfeito.')) return;
-  try {
-    await apiDelete(id);
-    incidents = incidents.filter(i => i.id !== id);
-    renderStats();
-    renderList();
-    showGlobalMsg('Incidente apagado.', true);
-  } catch(e) {
-    showGlobalMsg('Erro ao apagar: ' + e.message, false);
-  }
-}
-
-// ─── IMPORT ───────────────────────────────────────────────────────────────────
-function parseIncidents(raw) {
-  let parsed;
-  try { parsed = JSON.parse(raw); }
-  catch(e) { throw new Error('JSON inválido: ' + e.message); }
-
-  let list = [];
-  if (Array.isArray(parsed)) list = parsed;
-  else if (parsed && typeof parsed === 'object') {
-    if (Array.isArray(parsed.incidentes)) list = parsed.incidentes;
-    else if (Array.isArray(parsed.incidents)) list = parsed.incidents;
-    else list = [parsed];
-  }
-
-  const valid = [], erros = [];
-  list.forEach((item, i) => {
-    if (!item || typeof item !== 'object') { erros.push(`item ${i}: não é objeto`); return; }
-    if (!item.date) { erros.push(`item ${i}: sem campo "date"`); return; }
-    if (!item.type) { erros.push(`item ${i}: sem campo "type"`); return; }
-    let sa = item.sensorActive;
-    if (sa === undefined || sa === null || sa === 'null') sa = null;
-    else if (sa === 'true' || sa === true) sa = true;
-    else if (sa === 'false' || sa === false) sa = false;
-    else sa = null;
-    valid.push({
-      id: item.id || ('inc-' + Date.now() + '-' + i),
-      date: item.date,
-      time: item.time || '',
-      type: TYPES.includes(item.type) ? item.type : 'Outro',
-      typeCustom: item.typeCustom || (!TYPES.includes(item.type) ? item.type : '') || '',
-      severity: [1,2,3].includes(parseInt(item.severity)) ? parseInt(item.severity) : 1,
-      sensorActive: sa,
-      symptoms: item.symptoms || '',
-      action: item.action || '',
-      recoveryTime: item.recoveryTime || '',
-      notes: item.notes || ''
-    });
-  });
-  return { valid, erros, total: list.length };
-}
-
-async function doImport() {
-  const raw = document.getElementById('json-input').value.trim();
-  const dbg = document.getElementById('debug-import');
-  const msgEl = document.getElementById('msg-import');
-  dbg.innerHTML = '';
-  msgEl.innerHTML = '';
-  if (!raw) { msgEl.innerHTML = '<div class="msg msg-err">Cola o JSON primeiro.</div>'; return; }
-  try {
-    const { valid, erros, total } = parseIncidents(raw);
-    let dbgText = `Total detetado: ${total}\nVálidos: ${valid.length}\nErros: ${erros.length}`;
-    if (erros.length) dbgText += '\n\n' + erros.join('\n');
-    dbg.innerHTML = `<div class="debug-box">${dbgText}</div>`;
-    if (!valid.length) {
-      msgEl.innerHTML = '<div class="msg msg-err">Nenhum registo válido. Ver detalhes acima.</div>';
-      return;
-    }
-    let saved = 0;
-    for (const inc of valid) {
-      try { await apiUpsert(inc); saved++; }
-      catch(e) { erros.push('Erro ao guardar ' + inc.id + ': ' + e.message); }
-    }
-    document.getElementById('json-input').value = '';
-    await loadAll();
-    msgEl.innerHTML = `<div class="msg msg-ok">${saved} registo(s) importado(s) com sucesso.${erros.length ? ' (' + erros.length + ' erro(s).)' : ''}</div>`;
-  } catch(e) {
-    msgEl.innerHTML = `<div class="msg msg-err">Erro: ${e.message}</div>`;
-  }
-}
-
-function loadExample() {
-  document.getElementById('json-input').value = JSON.stringify({
-    id: "inc-1742089800000",
-    date: "2026-03-16",
-    time: "03:30",
-    type: "Hipoglicemia",
-    typeCustom: "",
-    severity: 3,
-    sensorActive: false,
-    symptoms: "Acordei com sensação de açúcares muito baixos",
-    action: "Comi tudo o que estava à frente — estava muito aflito, não foi uma reação controlada",
-    recoveryTime: "~1 hora, depois consegui adormecer",
-    notes: "Sensor tinha acabado na véspera à noite. Único fator identificado."
-  }, null, 2);
-}
-
-// ─── EXPORT ───────────────────────────────────────────────────────────────────
-async function loadAllForExport() {
-  const ec = document.getElementById('export-content');
-  ec.innerHTML = '<div class="loading">A carregar</div>';
-  try {
-    const all = await apiGet();
-    ec.innerHTML = `<div class="mono-box" style="max-height:300px">${JSON.stringify(all, null, 2)}</div>`;
-  } catch(e) {
-    ec.innerHTML = `<div class="msg msg-err">Erro: ${e.message}</div>`;
-  }
-}
-
-async function doExport() {
-  try {
-    const all = await apiGet();
-    const b = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b);
-    a.download = 'caderno-saude-bernardo.json';
-    a.click();
-  } catch(e) {
-    showGlobalMsg('Erro ao exportar: ' + e.message, false);
-  }
+  // Backup
+  const lb=localStorage.getItem(LAST_BACKUP_KEY);
+  if(lb){const d=Math.floor((Date.now()-parseInt(lb))/86400000);if(d>7)parts.push(`<div class="banner banner-info">💾 Último backup há ${d} dias. Considera exportar.</div>`);}
+  else if(DB.incidents.length>0){parts.push(`<div class="banner banner-info">💾 Sem backup registado. Exporta os teus dados.</div>`);}
+  // Meds ending soon
+  const ending=DB.med_temp.filter(m=>{const d=dl(m.end_date);return d!==null&&d>=0&&d<=2;});
+  ending.forEach(m=>parts.push(`<div class="banner banner-warn">⏳ ${esc(m.name)} termina ${dl(m.end_date)===0?'hoje':dl(m.end_date)===1?'amanhã':'em 2 dias'}.</div>`));
+  el.innerHTML=parts.join('');
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-function switchTab(name) {
-  ['lista','importar','exportar'].forEach(t => {
-    document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
-  });
-  document.querySelectorAll('.tab').forEach((btn, i) => {
-    btn.classList.toggle('active', ['lista','importar','exportar'][i] === name);
-  });
-  if (name === 'exportar') loadAllForExport();
+const TABS=['dashboard','incidentes','glicemia','episodios','historico','equipamento','consultas','medicacao','perfil','importar','exportar'];
+function goTab(name){
+  curTab=name;detId=null;formOpen=null;
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>{if(b.textContent.trim().toLowerCase().startsWith(name.slice(0,4)))b.classList.add('active');});
+  TABS.forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'block':'none');
+  renderCurrent();
+}
+function renderCurrent(){
+  const fn={dashboard:rDash,incidentes:rInc,glicemia:rGlu,episodios:rEp,historico:rHist,equipamento:rEqp,consultas:rApt,medicacao:rMed,perfil:rPerfil,importar:rImport,exportar:rExport};
+  if(fn[curTab])fn[curTab]();
+}
+function openForm(t){formOpen=t;renderCurrent();setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),50);}
+function openDetail(id){detId=id;renderCurrent();setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),50);}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function rDash(){
+  const el=document.getElementById('tab-dashboard');
+  const lg=DB.glucose[0];
+  const na=DB.appointments.find(a=>a.next_appointment&&a.next_appointment>=today());
+  const am=DB.med_temp.filter(m=>{const d=dl(m.end_date);return d===null||d>=0;});
+  const ri=DB.incidents.slice(0,5);
+  el.innerHTML=`
+    ${lg?`<div class="lbl">última glicemia</div>
+    <div class="card s" style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <span class="sn ${gc(lg.value_mgdl)}" style="font-family:'DM Serif Display',serif;font-size:44px;line-height:1;letter-spacing:-1px">${lg.value_mgdl}</span>
+      <span style="font-size:13px;color:var(--t3)">mg/dL</span>
+      <span class="badge ${gb(lg.value_mgdl)}">${lg.value_mgdl<70?'Baixa':lg.value_mgdl>180?'Alta':'Normal'}</span>
+      <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:var(--t3)">${fmtDT(lg.datetime)}</span>
+    </div>`:''}
+    ${am.length?`<div class="lbl">medicação ativa</div>
+    ${am.map(m=>{const d=dl(m.end_date);const cls=d===null?'pc-a':d<=2?'pc-w':'pc-a';const txt=d===null?'sem fim':d===0?'termina hoje':`${d} dia${d!==1?'s':''} restante${d!==1?'s':''}`;
+    return`<div class="card s" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <div><div style="font-size:14px;font-weight:500">${esc(m.name)}</div>
+      <div style="font-size:12px;color:var(--t3)">${[m.dose,m.unit,m.frequency].filter(Boolean).map(esc).join(' ')}${m.reason?' · '+esc(m.reason):''}</div></div>
+      <span class="pc ${cls}">${txt}</span>
+    </div>`;}).join('')}`:''}
+    ${na?`<div class="lbl">próxima consulta</div>
+    <div class="card s"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div><div style="font-size:14px;font-weight:500">${esc(na.specialty)}</div>${na.doctor?`<div style="font-size:12px;color:var(--t3)">${esc(na.doctor)}</div>`:''}</div>
+      <span class="badge bb">${fmtD(na.next_appointment)}</span>
+    </div></div>`:''}
+    <div class="lbl">incidentes recentes</div>
+    ${ri.length?ri.map(i=>incCard(i,true)).join(''):'<div class="empty">Sem incidentes registados</div>'}
+    <div class="divider"></div>
+    <div class="brow">
+      <button class="btn btn-p" onclick="goTab('incidentes');openForm('inc')">+ Incidente</button>
+      <button class="btn" onclick="goTab('glicemia');openForm('glu')">+ Glicemia</button>
+      <button class="btn" onclick="goTab('episodios');openForm('ep')">+ Episódio hospitalar</button>
+    </div>`;
 }
 
-function setFilter(val, btn) {
-  currentFilter = val;
-  document.querySelectorAll('.fc').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderList();
+// ─── INCIDENTES ───────────────────────────────────────────────────────────────
+function incCard(i,compact){
+  const lbl=i.type==='Outro'&&i.typeCustom?i.typeCustom:i.type;
+  const dur=duration(i.date,i.time,i.endDate,i.endTime);
+  return`<div class="card" onclick="goTab('incidentes');openDetail('${i.id}')">
+    <div class="ct"><div class="cbs">
+      <span class="badge ${TYPB[i.type]||'bb'}">${esc(lbl)}</span>
+      <span class="badge ${SEVB[i.severity]}">${SEVL[i.severity]}</span>
+      ${i.sickDay?'<span class="badge ba">sick day</span>':''}
+      ${i.sensorActive===false?'<span class="badge bz">sem sensor</span>':''}
+      ${i.glucoseAtEvent?`<span class="badge ${gb(i.glucoseAtEvent)}">${i.glucoseAtEvent} mg/dL</span>`:''}
+      ${dur?`<span class="badge bz">${dur}</span>`:''}
+    </div><span class="cd">${fmtD(i.date)}${i.time?' · '+i.time:''}</span></div>
+    ${i.symptoms?`<div class="cb">${esc(i.symptoms).slice(0,compact?90:110)}${i.symptoms.length>(compact?90:110)?'…':''}</div>`:''}
+    ${i.action?`<div class="ca">${esc(i.action).slice(0,80)}${i.action.length>80?'…':''}</div>`:''}
+    <div class="cf" onclick="event.stopPropagation()"><button class="btn btn-d" onclick="doDel('medical_incidents','${i.id}')">apagar</button></div>
+  </div>`;
 }
 
-function openDetail(id) { showingDetail = id; renderList(); }
-function closeDetail() { showingDetail = null; renderList(); }
+function rInc(){
+  const el=document.getElementById('tab-incidentes');
+  if(detId){
+    const i=DB.incidents.find(x=>x.id===detId);
+    if(!i){detId=null;rInc();return;}
+    const lbl=i.type==='Outro'&&i.typeCustom?i.typeCustom:i.type;
+    const dur=duration(i.date,i.time,i.endDate,i.endTime);
+    const rows=[['Data início',`${fmtD(i.date)}${i.time?' · '+i.time:''}`],['Data fim',i.endDate?`${fmtD(i.endDate)}${i.endTime?' · '+i.endTime:''}`:'—'],['Duração',dur||'—'],['Tipo',lbl],['Gravidade',SEVL[i.severity]],['Sensor',i.sensorActive===true?'Sim':i.sensorActive===false?'Não':'N/A'],['Glicemia',i.glucoseAtEvent?i.glucoseAtEvent+' mg/dL':'—'],['Acetonas',i.ketones||'—'],['Localização',i.location||'—'],['Trigger',i.trigger||'—'],['Sick day',i.sickDay?'Sim':'Não'],['Sintomas',i.symptoms||'—'],['Ação',i.action||'—'],['Recuperação',i.recoveryTime||'—'],['Nota medicação',i.medicationNote||'—'],['Notas',i.notes||'—']];
+    el.innerHTML=`<div class="card s"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="badge ${TYPB[i.type]||'bb'}">${esc(lbl)}</span><span class="badge ${SEVB[i.severity]}">${SEVL[i.severity]}</span>${i.sickDay?'<span class="badge ba">sick day</span>':''}</div>
+      <button class="btn btn-s" onclick="detId=null;rInc()">← voltar</button>
+    </div>${rows.map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(String(v))}</div></div>`).join('')}
+    <div class="lbl">JSON</div><div class="mono">${JSON.stringify(i,null,2)}</div></div>`;
+    return;
+  }
+  const filt=incF===0?DB.incidents:DB.incidents.filter(x=>x.severity===incF);
+  el.innerHTML=`
+    ${!formOpen?`<div class="brow">
+      <button class="btn btn-p" onclick="openForm('inc')">+ Novo incidente</button>
+      <button class="btn btn-b" onclick="showSummary()">Resumo ${sumMode}</button>
+    </div>`:''}
+    ${formOpen==='inc'?incForm():''}
+    ${formOpen==='summary'?incSummary():''}
+    ${!formOpen?`<div class="fr">${[[0,'Todos'],[1,'Leve'],[2,'Moderado'],[3,'Grave']].map(([k,l])=>`<button class="fc${incF===k?' active':''}" onclick="incF=${k};rInc()">${l}</button>`).join('')}</div>
+    ${filt.length?filt.map(i=>incCard(i)).join(''):`<div class="empty">${incF===0?'Sem incidentes registados.':'Nenhum com esta gravidade.'}</div>`}`:''}`;
+}
 
-// ─── MESSAGES ─────────────────────────────────────────────────────────────────
-function showGlobalMsg(text, ok) {
-  const el = document.getElementById('msg-global');
-  el.innerHTML = `<div class="msg ${ok ? 'msg-ok' : 'msg-err'}">${text}</div>`;
-  setTimeout(() => el.innerHTML = '', 4000);
+function showSummary(){formOpen='summary';rInc();}
+
+function incSummary(){
+  const items=DB.incidents.slice(0,sumMode);
+  return`<div class="card s" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:15px;font-weight:500">Resumo — últimos ${sumMode} incidentes</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-s" onclick="sumMode=10;formOpen='summary';rInc()">10</button>
+        <button class="btn btn-s" onclick="sumMode=20;formOpen='summary';rInc()">20</button>
+        <button class="btn btn-s" onclick="sumMode=50;formOpen='summary';rInc()">50</button>
+        <button class="btn btn-s" onclick="exportSummary()">Export CSV</button>
+        <button class="btn btn-s" onclick="formOpen=null;rInc()">Fechar</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="stbl">
+      <thead><tr><th>Data</th><th>Tipo</th><th>Grav.</th><th>Glicemia</th><th>Duração</th><th>Sick</th><th>Sintomas</th></tr></thead>
+      <tbody>${items.map(i=>{
+        const lbl=i.type==='Outro'&&i.typeCustom?i.typeCustom:i.type;
+        const dur=duration(i.date,i.time,i.endDate,i.endTime);
+        return`<tr>
+          <td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:11px">${fmtD(i.date)}${i.time?'<br>'+i.time:''}</td>
+          <td><span class="badge ${TYPB[i.type]||'bb'}" style="font-size:10px">${esc(lbl)}</span></td>
+          <td><span class="badge ${SEVB[i.severity]}" style="font-size:10px">${SEVL[i.severity]}</span></td>
+          <td style="font-family:'DM Mono',monospace">${i.glucoseAtEvent?i.glucoseAtEvent+' mg/dL':'—'}</td>
+          <td style="font-family:'DM Mono',monospace">${dur||i.recoveryTime||'—'}</td>
+          <td>${i.sickDay?'✓':''}</td>
+          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.symptoms||'—')}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function exportSummary(){
+  const items=DB.incidents.slice(0,sumMode);
+  const h='Data,Hora,Tipo,Gravidade,Glicemia,Acetonas,Sick Day,Duração,Sintomas,Ação,Recuperação,Notas';
+  const rows=items.map(i=>{
+    const dur=duration(i.date,i.time,i.endDate,i.endTime);
+    const lbl=i.type==='Outro'&&i.typeCustom?i.typeCustom:i.type;
+    return[i.date,i.time,lbl,SEVL[i.severity],i.glucoseAtEvent||'',i.ketones||'',i.sickDay?'Sim':'',dur||i.recoveryTime||'',i.symptoms,i.action,i.recoveryTime,i.notes].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',');
+  });
+  const csv=h+'\n'+rows.join('\n');
+  const b=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`incidentes-${today()}.csv`;a.click();
+}
+
+function incForm(){
+  return`<div class="card s" style="margin-bottom:14px">
+  <div style="font-size:15px;font-weight:500;margin-bottom:13px">Novo incidente</div>
+  <div class="g2">
+    <div class="fg"><label>Data início</label><input type="date" id="fi-d" value="${today()}"></div>
+    <div class="fg"><label>Hora início</label><input type="time" id="fi-t" value="${nowT()}"></div>
+  </div>
+  <div class="g2">
+    <div class="fg"><label>Data fim (opcional)</label><input type="date" id="fi-ed"></div>
+    <div class="fg"><label>Hora fim (opcional)</label><input type="time" id="fi-et"></div>
+  </div>
+  <div class="g2">
+    <div class="fg"><label>Tipo</label><select id="fi-type" onchange="document.getElementById('fi-cw').style.display=this.value==='Outro'?'flex':'none'">${ITYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
+    <div class="fg"><label>Gravidade</label><select id="fi-sev"><option value="1">1 — Leve</option><option value="2">2 — Moderado</option><option value="3">3 — Grave</option></select></div>
+  </div>
+  <div class="fg" id="fi-cw" style="display:none"><label>Tipo personalizado</label><input type="text" id="fi-tc"></div>
+  <div class="g3">
+    <div class="fg"><label>Sensor</label><select id="fi-sen"><option value="na">N/A</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+    <div class="fg"><label>Glicemia (mg/dL)</label><input type="number" id="fi-gv" placeholder="ex: 55"></div>
+    <div class="fg"><label>Acetonas</label><select id="fi-ket"><option value="">—</option><option>negativo</option><option>traços</option><option>moderado</option><option>alto</option></select></div>
+  </div>
+  <div class="g3">
+    <div class="fg"><label>Localização</label><select id="fi-loc"><option value="">—</option><option>casa</option><option>hospital</option><option>trabalho</option><option>carro</option><option>exterior</option><option>outro</option></select></div>
+    <div class="fg"><label>Trigger</label><select id="fi-tri"><option value="">—</option><option>doença</option><option>exercício</option><option>refeição</option><option>stress</option><option>sono</option><option>medicação</option><option>outro</option></select></div>
+    <div class="fg"><label>Sick day?</label><select id="fi-sd"><option value="0">Não</option><option value="1">Sim</option></select></div>
+  </div>
+  <div class="fg"><label>Sintomas</label><textarea id="fi-sym" placeholder="O que sentiste?"></textarea></div>
+  <div class="fg"><label>Ação tomada</label><textarea id="fi-act" placeholder="O que fizeste?"></textarea></div>
+  <div class="g2">
+    <div class="fg"><label>Tempo de recuperação</label><input type="text" id="fi-rec" placeholder="ex: 20 min"></div>
+    <div class="fg"><label>Nota medicação</label><input type="text" id="fi-mn" placeholder="ex: basal +30% sick day"></div>
+  </div>
+  <div class="fg"><label>Notas</label><textarea id="fi-not"></textarea></div>
+  <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="saveInc()">Guardar</button><button class="btn" onclick="formOpen=null;rInc()">Cancelar</button></div>
+</div>`;
+}
+
+async function saveInc(){
+  const date=document.getElementById('fi-d').value;
+  if(!date){flash('Preenche a data.','err');return;}
+  const sa=document.getElementById('fi-sen').value;
+  const gv=document.getElementById('fi-gv').value;
+  const inc={id:uid('inc'),date,time:document.getElementById('fi-t').value||'',endDate:document.getElementById('fi-ed').value||'',endTime:document.getElementById('fi-et').value||'',type:document.getElementById('fi-type').value,typeCustom:document.getElementById('fi-tc')?.value||'',severity:parseInt(document.getElementById('fi-sev').value),sensorActive:sa==='na'?null:sa==='sim',glucoseAtEvent:gv?parseInt(gv):null,ketones:document.getElementById('fi-ket').value||'',location:document.getElementById('fi-loc').value||'',trigger:document.getElementById('fi-tri').value||'',sickDay:document.getElementById('fi-sd').value==='1',symptoms:document.getElementById('fi-sym').value.trim(),action:document.getElementById('fi-act').value.trim(),recoveryTime:document.getElementById('fi-rec').value.trim(),medicationNote:document.getElementById('fi-mn').value.trim(),notes:document.getElementById('fi-not').value.trim()};
+  try{await sbUp('medical_incidents',toIR(inc));formOpen=null;await loadAll();flash('Incidente guardado.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
+}
+
+// ─── GLICEMIA ─────────────────────────────────────────────────────────────────
+function rGlu(){
+  const el=document.getElementById('tab-glicemia');
+  const fh=formOpen==='glu'?`<div class="card s" style="margin-bottom:14px">
+    <div style="font-size:15px;font-weight:500;margin-bottom:13px">Nova leitura</div>
+    <div class="g2"><div class="fg"><label>Data e hora</label><input type="datetime-local" id="gg-dt" value="${new Date().toISOString().slice(0,16)}"></div><div class="fg"><label>Valor (mg/dL)</label><input type="number" id="gg-v" placeholder="ex: 120"></div></div>
+    <div class="g2">
+      <div class="fg"><label>Contexto</label><select id="gg-ctx"><option>jejum</option><option>pré-refeição</option><option>pós-refeição-1h</option><option>pós-refeição-2h</option><option>noturno</option><option>exercício</option><option>sick-day</option><option>outro</option></select></div>
+      <div class="fg"><label>Fonte</label><select id="gg-src"><option value="sensor">Sensor (Guardian 4)</option><option value="picada">Picada</option><option value="outro">Outro</option></select></div>
+    </div>
+    <div class="fg"><label>Notas</label><textarea id="gg-not"></textarea></div>
+    <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="saveGlu()">Guardar</button><button class="btn" onclick="formOpen=null;rGlu()">Cancelar</button></div>
+  </div>`:'';
+  el.innerHTML=`${!formOpen?`<div class="brow"><button class="btn btn-p" onclick="openForm('glu')">+ Nova leitura</button></div>`:''} ${fh}
+    ${DB.glucose.length?DB.glucose.map(g=>`<div class="card s"><div class="ct">
+      <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+        <span class="sn ${gc(g.value_mgdl)}" style="font-family:'DM Serif Display',serif;font-size:26px;line-height:1">${g.value_mgdl}</span>
+        <span style="font-size:12px;color:var(--t3)">mg/dL</span>
+        <span class="badge ${gb(g.value_mgdl)}">${g.value_mgdl<70?'Baixa':g.value_mgdl>180?'Alta':'Normal'}</span>
+        <span class="badge bz">${g.context||'—'}</span>
+        <span class="badge bz">${g.source||'—'}</span>
+      </div><span class="cd">${fmtDT(g.datetime)}</span></div>
+      ${g.notes?`<div class="cb">${esc(g.notes)}</div>`:''}
+      <div class="cf"><button class="btn btn-d" onclick="doDel('glucose_readings','${g.id}')">apagar</button></div>
+    </div>`).join(''):'<div class="empty">Sem leituras registadas.</div>'}`;
+}
+
+async function saveGlu(){
+  const v=document.getElementById('gg-v').value,dt=document.getElementById('gg-dt').value;
+  if(!v||!dt){flash('Preenche data e valor.','err');return;}
+  try{await sbUp('glucose_readings',{id:uid('glu'),datetime:new Date(dt).toISOString(),value_mgdl:parseInt(v),context:document.getElementById('gg-ctx').value,source:document.getElementById('gg-src').value,sensor_model:document.getElementById('gg-src').value==='sensor'?'Guardian 4':null,notes:document.getElementById('gg-not').value.trim()||null});formOpen=null;await loadAll();flash('Leitura guardada.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
+}
+
+// ─── EPISÓDIOS HOSPITALARES ───────────────────────────────────────────────────
+function rEp(){
+  const el=document.getElementById('tab-episodios');
+  const fh=formOpen==='ep'?`<div class="card s" style="margin-bottom:14px">
+    <div style="font-size:15px;font-weight:500;margin-bottom:13px">Novo episódio hospitalar</div>
+    <div class="g2"><div class="fg"><label>Data de entrada</label><input type="date" id="ep-di" value="${today()}"></div><div class="fg"><label>Hora entrada</label><input type="time" id="ep-ti" value="${nowT()}"></div></div>
+    <div class="g2"><div class="fg"><label>Data de alta</label><input type="date" id="ep-do"></div><div class="fg"><label>Hora alta</label><input type="time" id="ep-to"></div></div>
+    <div class="g2"><div class="fg"><label>Hospital</label><input type="text" id="ep-h" placeholder="ex: Hospital La Paz"></div><div class="fg"><label>Serviço</label><input type="text" id="ep-s" placeholder="ex: ORL, Urgências"></div></div>
+    <div class="g2"><div class="fg"><label>Médico responsável</label><input type="text" id="ep-doc" placeholder="Dr./Dra. ..."></div>
+    <div class="fg"><label>Tipo</label><select id="ep-type"><option>urgente</option><option>programado</option><option>consulta</option><option>cirurgia</option><option>outro</option></select></div></div>
+    <div class="fg"><label>Motivo de ingresso</label><input type="text" id="ep-ri" placeholder="ex: Odinofagia, dor abdominal..."></div>
+    <div class="fg"><label>Diagnóstico principal</label><input type="text" id="ep-dx" placeholder="ex: Flemão periamigdalino esquerdo"></div>
+    <div class="g2"><div class="fg"><label>Glicemia na entrada (mg/dL)</label><input type="number" id="ep-glu" placeholder="ex: 373"></div><div class="fg"><label>HbA1c (se pedida)</label><input type="number" id="ep-hba" step="0.1" placeholder="ex: 7.5"></div></div>
+    <div class="fg"><label>Procedimentos realizados</label><textarea id="ep-proc" placeholder="Descreve o que foi feito..."></textarea></div>
+    <div class="fg"><label>Evolução clínica</label><textarea id="ep-ev" placeholder="Como correu o internamento..."></textarea></div>
+    <div class="fg"><label>Instruções de alta</label><textarea id="ep-alt" placeholder="Medicação, revisões, dieta..."></textarea></div>
+    <div class="fg"><label>Notas</label><textarea id="ep-not"></textarea></div>
+    <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="saveEp()">Guardar</button><button class="btn" onclick="formOpen=null;rEp()">Cancelar</button></div>
+  </div>`:'';
+  el.innerHTML=`${!formOpen?`<div class="brow"><button class="btn btn-p" onclick="openForm('ep')">+ Novo episódio</button></div>`:''} ${fh}
+    ${DB.episodes.length?DB.episodes.map(e=>{
+      const dur=duration(e.date_in,e.time_in,e.date_out,e.time_out);
+      return`<div class="card s"><div class="ct"><div class="cbs">
+        <span class="badge bb">${esc(e.hospital)}</span>
+        ${e.service?`<span class="badge bz">${esc(e.service)}</span>`:''}
+        <span class="badge ${e.episode_type==='urgente'?'br':e.episode_type==='cirurgia'?'bp':'bz'}">${e.episode_type||'outro'}</span>
+        ${dur?`<span class="badge bz">${dur}</span>`:''}
+      </div><span class="cd">${fmtD(e.date_in)}${e.date_out&&e.date_out!==e.date_in?' → '+fmtD(e.date_out):''}</span></div>
+        ${e.diagnosis?`<div style="font-size:14px;font-weight:500;margin-bottom:4px">${esc(e.diagnosis)}</div>`:''}
+        ${e.reason_in?`<div class="cb">Motivo: ${esc(e.reason_in)}</div>`:''}
+        ${e.doctor?`<div style="font-size:12px;color:var(--t3);margin-top:4px">${esc(e.doctor)}</div>`:''}
+        ${e.glucose_at_admission?`<div class="badge ${gb(e.glucose_at_admission)}" style="display:inline-block;margin-top:6px">${e.glucose_at_admission} mg/dL entrada</div>`:''}
+        <div class="cf"><button class="btn btn-d" onclick="doDel('hospital_episodes','${e.id}')">apagar</button></div>
+      </div>`;
+    }).join(''):'<div class="empty">Sem episódios hospitalares.</div>'}`;
+}
+
+async function saveEp(){
+  const di=document.getElementById('ep-di').value;
+  if(!di){flash('Preenche a data de entrada.','err');return;}
+  const hosp=document.getElementById('ep-h').value.trim();
+  if(!hosp){flash('Preenche o hospital.','err');return;}
+  const glu=document.getElementById('ep-glu').value;
+  const hba=document.getElementById('ep-hba').value;
+  const row={id:uid('ep'),date_in:di,time_in:document.getElementById('ep-ti').value||null,date_out:document.getElementById('ep-do').value||null,time_out:document.getElementById('ep-to').value||null,hospital:hosp,service:document.getElementById('ep-s').value.trim()||null,doctor:document.getElementById('ep-doc').value.trim()||null,episode_type:document.getElementById('ep-type').value,reason_in:document.getElementById('ep-ri').value.trim()||null,diagnosis:document.getElementById('ep-dx').value.trim()||null,glucose_at_admission:glu?parseInt(glu):null,hba1c_at_admission:hba?parseFloat(hba):null,procedures:document.getElementById('ep-proc').value.trim()||null,evolution:document.getElementById('ep-ev').value.trim()||null,discharge_notes:document.getElementById('ep-alt').value.trim()||null,notes:document.getElementById('ep-not').value.trim()||null};
+  try{await sbUp('hospital_episodes',row);formOpen=null;await loadAll();flash('Episódio guardado.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
+}
+
+// ─── HISTORIAL ────────────────────────────────────────────────────────────────
+function rHist(){
+  const el=document.getElementById('tab-historico');
+  const fh=formOpen==='hist'?`<div class="card s" style="margin-bottom:14px">
+    <div style="font-size:15px;font-weight:500;margin-bottom:13px">Novo diagnóstico / episódio</div>
+    <div class="g2"><div class="fg"><label>Data</label><input type="date" id="hi-d" value="${today()}"></div><div class="fg"><label>Status</label><select id="hi-st"><option value="ativo">Ativo</option><option value="crónico">Crónico</option><option value="em-seguimento">Em seguimento</option><option value="resolvido">Resolvido</option></select></div></div>
+    <div class="fg"><label>Diagnóstico</label><input type="text" id="hi-dx" placeholder="ex: Retinopatia diabética"></div>
+    <div class="g2"><div class="fg"><label>Fonte</label><select id="hi-src"><option value="SNS">SNS</option><option value="privado">Privado</option><option value="auto">Auto-registo</option><option value="outro">Outro</option></select></div><div class="fg"><label>Especialidade</label><input type="text" id="hi-sp" placeholder="ex: Oftalmologia"></div></div>
+    <div class="fg"><label>Notas</label><textarea id="hi-not"></textarea></div>
+    <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="saveHist()">Guardar</button><button class="btn" onclick="formOpen=null;rHist()">Cancelar</button></div>
+  </div>`:'';
+  const statBadge={ativo:'br',crónico:'ba',resolvido:'bg','em-seguimento':'bb'};
+  el.innerHTML=`${!formOpen?`<div class="brow"><button class="btn btn-p" onclick="openForm('hist')">+ Novo diagnóstico</button></div>`:''} ${fh}
+    <p style="font-size:12px;color:var(--t3);margin-bottom:12px">Historial cronológico de todos os diagnósticos e episódios médicos.</p>
+    ${DB.history.length?DB.history.map(h=>`<div class="card s"><div class="ct"><div class="cbs">
+      <span class="badge ${statBadge[h.status]||'bz'}">${h.status||'ativo'}</span>
+      ${h.source?`<span class="badge bz">${h.source}</span>`:''}
+      ${h.specialty?`<span class="badge bz">${esc(h.specialty)}</span>`:''}
+    </div><span class="cd">${fmtD(h.date)}</span></div>
+      <div style="font-size:14px;font-weight:500">${esc(h.diagnosis)}</div>
+      ${h.notes?`<div class="cb" style="margin-top:4px">${esc(h.notes)}</div>`:''}
+      <div class="cf"><button class="btn btn-d" onclick="doDel('medical_history','${h.id}')">apagar</button></div>
+    </div>`).join(''):'<div class="empty">Sem historial registado.<br>Podes importar os episódios do SNS via JSON.</div>'}`;
+}
+
+async function saveHist(){
+  const d=document.getElementById('hi-d').value,dx=document.getElementById('hi-dx').value.trim();
+  if(!d||!dx){flash('Preenche data e diagnóstico.','err');return;}
+  try{await sbUp('medical_history',{id:uid('hi'),date:d,diagnosis:dx,status:document.getElementById('hi-st').value,source:document.getElementById('hi-src').value,specialty:document.getElementById('hi-sp').value.trim()||null,notes:document.getElementById('hi-not').value.trim()||null});formOpen=null;await loadAll();flash('Guardado.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
+}
+
+// ─── EQUIPAMENTO ──────────────────────────────────────────────────────────────
+function rEqp(){
+  const el=document.getElementById('tab-equipamento');
+  const fh=formOpen==='eqp'?`<div class="card s" style="margin-bottom:14px">
+    <div style="font-size:15px;font-weight:500;margin-bottom:13px">Novo registo de equipamento</div>
+    <div class="g2"><div class="fg"><label>Data</label><input type="date" id="eq-d" value="${today()}"></div><div class="fg"><label>Hora</label><input type="time" id="eq-t" value="${nowT()}"></div></div>
+    <div class="g2"><div class="fg"><label>Equipamento</label><select id="eq-type"><option>sensor</option><option>bomba</option><option>reservatório</option><option>cateter</option><option>outro</option></select></div><div class="fg"><label>Modelo</label><input type="text" id="eq-mod" value="Guardian 4"></div></div>
+    <div class="fg"><label>Evento</label><select id="eq-ev"><option>troca</option><option>falha</option><option>alarme</option><option>calibração</option><option>outro</option></select></div>
+    <div class="fg"><label>Notas</label><textarea id="eq-not"></textarea></div>
+    <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="saveEqp()">Guardar</button><button class="btn" onclick="formOpen=null;rEqp()">Cancelar</button></div>
+  </div>`:'';
+  el.innerHTML=`${!formOpen?`<div class="brow"><button class="btn btn-p" onclick="openForm('eqp')">+ Novo registo</button></div>`:''} ${fh}
+    ${DB.equipment.length?DB.equipment.map(e=>`<div class="card s"><div class="ct"><div class="cbs">
+      <span class="badge bb">${e.equipment_type}</span>
+      <span class="badge ${e.event_type==='falha'?'br':e.event_type==='alarme'?'ba':'bz'}">${e.event_type}</span>
+      ${e.equipment_model?`<span style="font-size:12px;color:var(--t3)">${esc(e.equipment_model)}</span>`:''}
+    </div><span class="cd">${fmtD(e.date)}${e.time?' · '+e.time:''}</span></div>
+      ${e.notes?`<div class="cb">${esc(e.notes)}</div>`:''}
+      <div class="cf"><button class="btn btn-d" onclick="doDel('equipment_log','${e.id}')">apagar</button></div>
+    </div>`).join(''):'<div class="empty">Sem registos de equipamento.</div>'}`;
+}
+
+async function saveEqp(){
+  const d=document.getElementById('eq-d').value;
+  if(!d){flash('Preenche a data.','err');return;}
+  try{await sbUp('equipment_log',{id:uid('eqp'),date:d,time:document.getElementById('eq-t').value||null,equipment_type:document.getElementById('eq-type').value,equipment_model:document.getElementById('eq-mod').value||null,event_type:document.getElementById('eq-ev').value,notes:document.getElementById('eq-not').value.trim()||null});formOpen=null;await loadAll();flash('Guardado.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
+}
+
+// ─── CONSULTAS ────────────────────────────────────────────────────────────────
+function rApt(){
+  const el=document.getElementById('tab-consultas');
+  const fh=formOpen==='apt'?`<div class="card s" style="margin-bottom:14px">
+    <div style="font-size:15px;font-weight:500;margin-bottom:13px">Nova consulta</div>
+    <div class="g2"><div class="fg"><label>Data</label><input type="date" id="ap-d" value="${today()}"></div><div class="fg"><label>Especialidade</label><select id="ap-sp"><option>diabetologia</option><option>endocrinologia</option><option>medicina-geral</option><option>nutrição</option><option>cardiologia</option><option>oftalmologia</option><option>nefrologia</option><option>ORL</option><option>outro</option></select></div></div>
+    <div class="g2"><div class="fg"><label>Médico</label><input type="text" id="ap-doc" placeholder="Dr./Dra. ..."></div><div class="fg"><label>Hospital / Centro</label><input type="text" id="ap-loc" placeholder="ex: La Paz, CS Colmenar"></div></div>
+    <div class="fg"><label>HbA1c (%)</label><input type="number" id="ap-hba" step="0.1" placeholder="ex: 6.8"></div>
+    <div class="fg"><label>Notas</label><textarea id="ap-not" placeholder="Resumo, exames pedidos, medicação alterada..."></textarea></div>
+    <div class="fg"><label>Próxima consulta</label><input type="date" id="ap-nx"></div>
+    <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="saveApt()">Guardar</button><button class="btn" onclick="formOpen=null;rApt()">Cancelar</button></div>
+  </div>`:'';
+  const hx=DB.appointments.filter(a=>a.hba1c).slice(0,8);
+  el.innerHTML=`${!formOpen?`<div class="brow"><button class="btn btn-p" onclick="openForm('apt')">+ Nova consulta</button></div>`:''} ${fh}
+    ${hx.length?`<div class="lbl">histórico HbA1c</div><div class="card s" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px">
+    ${hx.map(a=>`<div style="text-align:center"><div class="sn ${a.hba1c<=7?'ok':a.hba1c<=8?'warn':'danger'}" style="font-family:'DM Serif Display',serif;font-size:22px">${a.hba1c}%</div><div style="font-size:10px;color:var(--t3);margin-top:2px">${fmtD(a.date)}</div></div>`).join('')}</div>`:''}
+    <div class="lbl">consultas</div>
+    ${DB.appointments.length?DB.appointments.map(a=>`<div class="card s"><div class="ct"><div class="cbs">
+      <span class="badge bb">${esc(a.specialty)}</span>
+      ${a.hba1c?`<span class="badge ${a.hba1c<=7?'bg':a.hba1c<=8?'ba':'br'}">HbA1c ${a.hba1c}%</span>`:''}
+    </div><span class="cd">${fmtD(a.date)}</span></div>
+      ${a.doctor?`<div style="font-size:12px;color:var(--t3);margin-bottom:4px">${esc(a.doctor)}${a.hospital?' · '+esc(a.hospital):''}</div>`:''}
+      ${a.notes?`<div class="cb">${esc(a.notes)}</div>`:''}
+      ${a.next_appointment?`<div style="font-size:12px;color:var(--g);margin-top:6px">Próxima: ${fmtD(a.next_appointment)}</div>`:''}
+      <div class="cf"><button class="btn btn-d" onclick="doDel('medical_appointments','${a.id}')">apagar</button></div>
+    </div>`).join(''):'<div class="empty">Sem consultas registadas.</div>'}`;
+}
+
+async function saveApt(){
+  const d=document.getElementById('ap-d').value;
+  if(!d){flash('Preenche a data.','err');return;}
+  const hba=document.getElementById('ap-hba').value;
+  try{await sbUp('medical_appointments',{id:uid('apt'),date:d,specialty:document.getElementById('ap-sp').value,doctor:document.getElementById('ap-doc').value||null,hospital:document.getElementById('ap-loc').value||null,hba1c:hba?parseFloat(hba):null,notes:document.getElementById('ap-not').value.trim()||null,next_appointment:document.getElementById('ap-nx').value||null});formOpen=null;await loadAll();flash('Guardado.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
+}
+
+// ─── MEDICAÇÃO ────────────────────────────────────────────────────────────────
+function rMed(){
+  const el=document.getElementById('tab-medicacao');
+  let fh='';
+  if(formOpen==='mb') fh=`<div class="card s" style="margin-bottom:14px">
+    <div style="font-size:15px;font-weight:500;margin-bottom:13px">Medicação crónica</div>
+    <div class="g2"><div class="fg"><label>Nome</label><input type="text" id="mb-n"></div><div class="fg"><label>Dose</label><input type="text" id="mb-d" placeholder="ex: 8 UI"></div></div>
+    <div class="g2"><div class="fg"><label>Frequência</label><input type="text" id="mb-f" placeholder="ex: 1x dia"></div><div class="fg"><label>Dispositivo</label><input type="text" id="mb-dv" placeholder="ex: Medtronic 780G"></div></div>
+    <div class="fg"><label>Data de início</label><input type="date" id="mb-st"></div>
+    <div class="fg"><label>Notas</label><textarea id="mb-nt"></textarea></div>
+    <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="saveMb()">Guardar</button><button class="btn" onclick="formOpen=null;rMed()">Cancelar</button></div>
+  </div>`;
+  if(formOpen==='mt') fh=`<div class="card s" style="margin-bottom:14px">
+    <div style="font-size:15px;font-weight:500;margin-bottom:13px">Medicação temporária</div>
+    <div class="g2"><div class="fg"><label>Nome</label><input type="text" id="mt-n"></div><div class="fg"><label>Dose</label><input type="text" id="mt-d" placeholder="ex: 875/125 mg"></div></div>
+    <div class="g2"><div class="fg"><label>Frequência</label><input type="text" id="mt-f" placeholder="ex: 1 comp. 8/8h"></div><div class="fg"><label>Duração (dias)</label><input type="number" id="mt-dur"></div></div>
+    <div class="g2"><div class="fg"><label>Início</label><input type="date" id="mt-st" value="${today()}"></div><div class="fg"><label>Fim (calculado auto)</label><input type="date" id="mt-en"></div></div>
+    <div class="fg"><label>Razão</label><input type="text" id="mt-r" placeholder="ex: Flemão periamigdalino"></div>
+    <div class="fg"><label>Notas</label><textarea id="mt-nt"></textarea></div>
+    <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="saveMt()">Guardar</button><button class="btn" onclick="formOpen=null;rMed()">Cancelar</button></div>
+  </div>`;
+  const am=DB.med_temp.filter(m=>{const d=dl(m.end_date);return d===null||d>=0;});
+  const pm=DB.med_temp.filter(m=>m.end_date&&dl(m.end_date)<0);
+  el.innerHTML=`${!formOpen?`<div class="brow"><button class="btn btn-p" onclick="openForm('mt')">+ Temporária</button><button class="btn" onclick="openForm('mb')">+ Crónica</button></div>`:''} ${fh}
+    <div class="lbl">medicação crónica</div>
+    ${DB.med_base.length?DB.med_base.map(m=>`<div class="card s"><div class="ct">
+      <div style="font-size:14px;font-weight:500">${esc(m.name)}</div>
+      <span class="badge ${m.active?'bg':'bz'}">${m.active?'ativa':'inativa'}</span>
+    </div>
+      <div style="font-size:12px;color:var(--t3)">${[m.dose,m.frequency,m.device].filter(Boolean).map(esc).join(' · ')}</div>
+      ${m.notes?`<div class="cb" style="margin-top:4px">${esc(m.notes)}</div>`:''}
+      <div class="cf"><button class="btn btn-d" onclick="doDel('medications_baseline','${m.id}')">apagar</button></div>
+    </div>`).join(''):'<div class="empty">Sem medicação crónica.</div>'}
+    <div class="lbl">medicação temporária ativa</div>
+    ${am.length?am.map(m=>{const d=dl(m.end_date);const cls=d===null?'pc-a':d<=2?'pc-w':'pc-a';const txt=d===null?'sem fim':d===0?'termina hoje':`${d} dia${d!==1?'s':''} restante${d!==1?'s':''}`;
+    return`<div class="card s"><div class="ct"><div><div style="font-size:14px;font-weight:500">${esc(m.name)}</div><div style="font-size:12px;color:var(--t3)">${[m.dose,m.unit,m.frequency].filter(Boolean).map(esc).join(' ')}${m.reason?' · '+esc(m.reason):''}</div></div><span class="pc ${cls}">${txt}</span></div>
+      <div style="font-size:11px;color:var(--t3);margin-top:5px">${fmtD(m.start_date)}${m.end_date?' → '+fmtD(m.end_date):''}</div>
+      ${m.notes?`<div class="cb" style="margin-top:4px">${esc(m.notes)}</div>`:''}
+      <div class="cf"><button class="btn btn-d" onclick="doDel('medications_temporary','${m.id}')">apagar</button></div>
+    </div>`}).join(''):'<div class="empty">Sem medicação temporária ativa.</div>'}
+    ${pm.length?`<div class="lbl">histórico de cursos</div>${pm.map(m=>`<div class="card s"><div class="ct"><div style="font-size:13px;color:var(--t2)">${esc(m.name)}${m.dose?' · '+esc(m.dose):''}</div><span class="pc pc-e">terminou</span></div><div style="font-size:11px;color:var(--t3)">${fmtD(m.start_date)}${m.end_date?' → '+fmtD(m.end_date):''}${m.reason?' · '+esc(m.reason):''}</div></div>`).join('')}`:''}`;
+}
+
+async function saveMb(){
+  const n=document.getElementById('mb-n').value.trim();
+  if(!n){flash('Preenche o nome.','err');return;}
+  try{await sbUp('medications_baseline',{id:uid('mb'),name:n,dose:document.getElementById('mb-d').value||null,frequency:document.getElementById('mb-f').value||null,device:document.getElementById('mb-dv').value||null,start_date:document.getElementById('mb-st').value||null,notes:document.getElementById('mb-nt').value.trim()||null,active:true});formOpen=null;await loadAll();flash('Guardado.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
+}
+
+async function saveMt(){
+  const n=document.getElementById('mt-n').value.trim(),st=document.getElementById('mt-st').value;
+  if(!n||!st){flash('Preenche nome e data de início.','err');return;}
+  const dur=document.getElementById('mt-dur').value;
+  let end=document.getElementById('mt-en').value;
+  if(!end&&dur&&st){const d=new Date(st);d.setDate(d.getDate()+parseInt(dur)-1);end=d.toISOString().slice(0,10);}
+  try{await sbUp('medications_temporary',{id:uid('mt'),name:n,dose:document.getElementById('mt-d').value||null,unit:null,frequency:document.getElementById('mt-f').value||null,start_date:st,end_date:end||null,duration_days:dur?parseInt(dur):null,reason:document.getElementById('mt-r').value.trim()||null,notes:document.getElementById('mt-nt').value.trim()||null});formOpen=null;await loadAll();flash('Guardado.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
+}
+
+// ─── PERFIL ───────────────────────────────────────────────────────────────────
+function rPerfil(){
+  const el=document.getElementById('tab-perfil');
+  const p=DB.profile;
+  if(formOpen==='perfil'){
+    el.innerHTML=`<div class="card s">
+      <div style="font-size:15px;font-weight:500;margin-bottom:13px">Editar perfil médico</div>
+      <div class="fg"><label>Alergias</label><textarea id="pf-al">${esc(p?.allergies||'')}</textarea></div>
+      <div class="fg"><label>Doenças crónicas</label><textarea id="pf-cc" style="min-height:100px">${esc(p?.chronic_conditions||'')}</textarea></div>
+      <div class="fg"><label>Cirurgias prévias</label><textarea id="pf-sx">${esc(p?.surgeries||'')}</textarea></div>
+      <div class="fg"><label>Antecedentes familiares</label><textarea id="pf-fh">${esc(p?.family_history||'')}</textarea></div>
+      <div class="fg"><label>Hábitos</label><textarea id="pf-hb">${esc(p?.habits||'')}</textarea></div>
+      <div class="fg"><label>Dispositivos ativos</label><textarea id="pf-dv">${esc(p?.active_devices||'')}</textarea></div>
+      <div class="fg"><label>Grupo sanguíneo</label><input type="text" id="pf-bt" value="${esc(p?.blood_type||'')}"></div>
+      <div class="fg"><label>Notas</label><textarea id="pf-nt">${esc(p?.notes||'')}</textarea></div>
+      <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="savePerfil()">Guardar</button><button class="btn" onclick="formOpen=null;rPerfil()">Cancelar</button></div>
+    </div>`;
+    return;
+  }
+  if(!p){el.innerHTML=`<div class="brow"><button class="btn btn-p" onclick="openForm('perfil')">Preencher perfil</button></div><div class="empty">Perfil não preenchido.</div>`;return;}
+  const fields=[['Alergias',p.allergies],['Doenças crónicas',p.chronic_conditions],['Cirurgias prévias',p.surgeries],['Antecedentes familiares',p.family_history],['Hábitos',p.habits],['Dispositivos ativos',p.active_devices],['Grupo sanguíneo',p.blood_type],['Notas',p.notes]];
+  el.innerHTML=`<div class="brow"><button class="btn" onclick="openForm('perfil')">Editar</button></div>
+    <div class="card s">${fields.filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}</div>`;
+}
+
+async function savePerfil(){
+  const row={id:'bernardo',allergies:document.getElementById('pf-al').value.trim()||null,chronic_conditions:document.getElementById('pf-cc').value.trim()||null,surgeries:document.getElementById('pf-sx').value.trim()||null,family_history:document.getElementById('pf-fh').value.trim()||null,habits:document.getElementById('pf-hb').value.trim()||null,active_devices:document.getElementById('pf-dv').value.trim()||null,blood_type:document.getElementById('pf-bt').value.trim()||null,notes:document.getElementById('pf-nt').value.trim()||null,updated_at:new Date().toISOString()};
+  try{await sbUp('medical_profile',row);formOpen=null;await loadAll();flash('Perfil guardado.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
+}
+
+// ─── IMPORTAR ─────────────────────────────────────────────────────────────────
+function rImport(){
+  const el=document.getElementById('tab-importar');
+  el.innerHTML=`
+    <p style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.7">Cola aqui um ou múltiplos blocos JSON gerados pelo Claude. Podes separar vários JSONs por uma linha em branco ou envolver tudo num array. Aceita: incidentes, glicemias, equipamento, episodiosHospitalares, historico, consultas, medicacaoTemporaria.</p>
+    <div id="msg-imp"></div>
+    <div id="preview-imp"></div>
+    <textarea id="ji" style="width:100%;min-height:200px;padding:10px;border:1px solid var(--b2);border-radius:var(--rs);background:var(--bg3);color:var(--t);font-family:'DM Mono',monospace;font-size:11px;resize:vertical" placeholder='Cole aqui o JSON do Claude...'></textarea>
+    <div class="brow" style="margin-top:10px">
+      <button class="btn btn-p" onclick="previewImport()">Preview</button>
+      <button class="btn btn-b" id="btn-confirm-import" style="display:none" onclick="confirmImport()">✓ Confirmar importação</button>
+      <button class="btn" onclick="document.getElementById('ji').value='';document.getElementById('preview-imp').innerHTML='';document.getElementById('btn-confirm-import').style.display='none'">Limpar</button>
+    </div>
+    <div id="dbg-imp"></div>
+    <div class="divider"></div>
+    <div class="lbl">formato suportado</div>
+    <div class="mono" style="font-size:10px">{
+  "incidentes": [{"id":"inc-xxx","date":"2026-03-20","type":"Hiperglicemia","severity":3,
+    "sickDay":true,"glucoseAtEvent":310,"ketones":"negativo","location":"hospital",
+    "trigger":"doença","symptoms":"...","action":"...","medicationNote":"basal +30%"}],
+  "glicemias": [{"datetime":"2026-03-20T14:00:00","value_mgdl":310,"context":"sick-day","source":"picada"}],
+  "episodiosHospitalares": [{"date_in":"2026-03-20","date_out":"2026-03-21",
+    "hospital":"Hospital La Paz","service":"ORL","episode_type":"urgente",
+    "diagnosis":"Flemão periamigdalino esquerdo","glucose_at_admission":373,"hba1c_at_admission":7.5}],
+  "historico": [{"date":"2023-10-27","diagnosis":"Retinopatia diabética","status":"em-seguimento","source":"SNS"}],
+  "medicacaoTemporaria": [{"name":"Amoxicilina-clavulânico","dose":"875/125mg",
+    "frequency":"1 comp. 8/8h","start_date":"2026-03-21","duration_days":10,
+    "reason":"Flemão periamigdalino"}]
+}</div>`;
+}
+
+let pendingImport=null;
+
+function previewImport(){
+  const raw=document.getElementById('ji').value.trim();
+  const preEl=document.getElementById('preview-imp');
+  const msgEl=document.getElementById('msg-imp');
+  const dbgEl=document.getElementById('dbg-imp');
+  preEl.innerHTML='';msgEl.innerHTML='';dbgEl.innerHTML='';
+  document.getElementById('btn-confirm-import').style.display='none';
+  if(!raw){msgEl.innerHTML='<div class="msg msg-err">Cola o JSON primeiro.</div>';return;}
+
+  // Tenta separar múltiplos JSONs por linha em branco
+  const blocks=raw.split(/\n\s*\n/).map(b=>b.trim()).filter(b=>b.startsWith('{')&&b.endsWith('}'));
+  const jsons=blocks.length>1?blocks:[raw];
+
+  let counts={incidentes:0,glicemias:0,equipamento:0,episodios:0,historico:0,consultas:0,medTemp:0};
+  let parsed=[];
+  let erros=[];
+
+  for(const j of jsons){
+    try{
+      const p=JSON.parse(j);
+      parsed.push(p);
+      // conta por tipo
+      if(Array.isArray(p)){p.forEach(item=>{if(item.date&&item.type)counts.incidentes++;});}
+      else{
+        if(p.incidentes)counts.incidentes+=p.incidentes.length;
+        if(p.incidents)counts.incidentes+=p.incidents.length;
+        if(p.glicemias)counts.glicemias+=p.glicemias.length;
+        if(p.glucose)counts.glicemias+=p.glucose.length;
+        if(p.equipamento)counts.equipamento+=p.equipamento.length;
+        if(p.episodiosHospitalares)counts.episodios+=p.episodiosHospitalares.length;
+        if(p.hospital_episodes)counts.episodios+=p.hospital_episodes.length;
+        if(p.historico)counts.historico+=p.historico.length;
+        if(p.medical_history)counts.historico+=p.medical_history.length;
+        if(p.consultas)counts.consultas+=p.consultas.length;
+        if(p.medicacaoTemporaria)counts.medTemp+=p.medicacaoTemporaria.length;
+        if(p.date&&p.type){counts.incidentes++;} // objeto único incidente
+      }
+    }catch(e){erros.push('Bloco inválido: '+e.message);}
+  }
+
+  pendingImport=parsed;
+  const total=Object.values(counts).reduce((a,b)=>a+b,0);
+  if(total===0&&erros.length===0){msgEl.innerHTML='<div class="msg msg-warn">Nenhum registo reconhecido. Verifica o formato.</div>';return;}
+
+  const lines=Object.entries({Incidentes:counts.incidentes,Glicemias:counts.glicemias,Equipamento:counts.equipamento,'Episódios hospitalares':counts.episodios,Historial:counts.historico,Consultas:counts.consultas,'Medicação temporária':counts.medTemp}).filter(([,v])=>v>0).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv" style="color:var(--g)">${v} registos</div></div>`).join('');
+
+  preEl.innerHTML=`<div class="card s" style="margin-bottom:12px">
+    <div style="font-size:13px;font-weight:500;margin-bottom:10px;color:var(--g)">Preview — ${total} registos a importar</div>
+    ${lines}
+    ${erros.length?`<div style="font-size:12px;color:var(--r);margin-top:8px">${erros.join('<br>')}</div>`:''}
+  </div>`;
+  document.getElementById('btn-confirm-import').style.display='inline-block';
+}
+
+async function confirmImport(){
+  if(!pendingImport){return;}
+  const dbgEl=document.getElementById('dbg-imp');
+  const msgEl=document.getElementById('msg-imp');
+  let saved=0,erros=[];
+
+  for(const p of pendingImport){
+    // Incidentes — objeto único ou array direto
+    let il=[];
+    if(Array.isArray(p))il=p.filter(x=>x.date&&x.type);
+    else if(p.date&&p.type)il=[p];
+    else{il=[...(p.incidentes||[]),(p.incidents||[])];}
+
+    for(const item of il){
+      if(!item.date||!item.type)continue;
+      let sa=item.sensorActive??item.sensor_active;
+      if(sa==='true'||sa===true)sa=true;else if(sa==='false'||sa===false)sa=false;else sa=null;
+      try{await sbUp('medical_incidents',toIR({id:item.id||uid('inc'),date:item.date,time:item.time||'',endDate:item.endDate||item.end_date||'',endTime:item.endTime||item.end_time||'',type:ITYPES.includes(item.type)?item.type:'Outro',typeCustom:item.typeCustom||item.type_custom||'',severity:[1,2,3].includes(parseInt(item.severity))?parseInt(item.severity):1,sensorActive:sa,glucoseAtEvent:item.glucoseAtEvent||item.glucose_at_event||null,ketones:item.ketones||'',location:item.location||'',trigger:item.trigger||'',sickDay:item.sickDay||item.sick_day||false,symptoms:item.symptoms||'',action:item.action||'',recoveryTime:item.recoveryTime||item.recovery_time||'',medicationNote:item.medicationNote||item.medication_note||'',notes:item.notes||''}));saved++;}
+      catch(e){erros.push('Inc: '+e.message);}
+    }
+
+    // Glicemias
+    for(const g of(p.glicemias||p.glucose||[])){
+      if(!g.datetime&&!g.value_mgdl)continue;
+      try{const dt=g.datetime?new Date(g.datetime).toISOString():new Date().toISOString();await sbUp('glucose_readings',{id:g.id||uid('glu'),datetime:dt,value_mgdl:parseInt(g.value_mgdl),context:g.context||null,source:g.source||null,sensor_model:g.sensor_model||null,notes:g.notes||null,incident_id:g.incident_id||null});saved++;}
+      catch(e){erros.push('Glu: '+e.message);}
+    }
+
+    // Episódios hospitalares
+    for(const e of(p.episodiosHospitalares||p.hospital_episodes||[])){
+      if(!e.date_in&&!e.dateIn)continue;
+      try{await sbUp('hospital_episodes',{id:e.id||uid('ep'),date_in:e.date_in||e.dateIn,time_in:e.time_in||e.timeIn||null,date_out:e.date_out||e.dateOut||null,time_out:e.time_out||e.timeOut||null,hospital:e.hospital||'',service:e.service||null,doctor:e.doctor||null,episode_type:e.episode_type||e.episodeType||'urgente',reason_in:e.reason_in||e.reasonIn||null,diagnosis:e.diagnosis||null,glucose_at_admission:e.glucose_at_admission||e.glucoseAtAdmission||null,hba1c_at_admission:e.hba1c_at_admission||e.hba1cAtAdmission||null,procedures:e.procedures||null,evolution:e.evolution||null,discharge_notes:e.discharge_notes||e.dischargeNotes||null,notes:e.notes||null});saved++;}
+      catch(e2){erros.push('Ep: '+e2.message);}
+    }
+
+    // Historial
+    for(const h of(p.historico||p.medical_history||[])){
+      if(!h.date||!h.diagnosis)continue;
+      try{await sbUp('medical_history',{id:h.id||uid('hi'),date:h.date,diagnosis:h.diagnosis,status:h.status||'ativo',source:h.source||'outro',specialty:h.specialty||null,notes:h.notes||null});saved++;}
+      catch(e){erros.push('Hist: '+e.message);}
+    }
+
+    // Consultas
+    for(const a of(p.consultas||p.appointments||[])){
+      if(!a.date)continue;
+      try{await sbUp('medical_appointments',{id:a.id||uid('apt'),date:a.date,specialty:a.specialty||'outro',doctor:a.doctor||null,hospital:a.hospital||a.location||null,hba1c:a.hba1c||null,notes:a.notes||null,next_appointment:a.next_appointment||a.nextAppointment||null});saved++;}
+      catch(e){erros.push('Apt: '+e.message);}
+    }
+
+    // Medicação temporária
+    for(const m of(p.medicacaoTemporaria||p.medications_temporary||[])){
+      if(!m.name||!m.start_date)continue;
+      let end=m.end_date;
+      if(!end&&m.duration_days&&m.start_date){const d=new Date(m.start_date);d.setDate(d.getDate()+parseInt(m.duration_days)-1);end=d.toISOString().slice(0,10);}
+      try{await sbUp('medications_temporary',{id:m.id||uid('mt'),name:m.name,dose:m.dose||null,unit:m.unit||null,frequency:m.frequency||null,start_date:m.start_date,end_date:end||null,duration_days:m.duration_days||null,reason:m.reason||null,notes:m.notes||null});saved++;}
+      catch(e){erros.push('Med: '+e.message);}
+    }
+  }
+
+  dbgEl.innerHTML=`<div class="dbg">Guardados: ${saved}\nErros: ${erros.length}${erros.length?'\n\n'+erros.join('\n'):''}</div>`;
+  document.getElementById('ji').value='';
+  document.getElementById('preview-imp').innerHTML='';
+  document.getElementById('btn-confirm-import').style.display='none';
+  pendingImport=null;
+  await loadAll();
+  msgEl.innerHTML=`<div class="msg msg-ok">${saved} registo(s) importado(s) com sucesso.${erros.length?' ('+erros.length+' erro(s).)':''}</div>`;
+}
+
+// ─── EXPORTAR ─────────────────────────────────────────────────────────────────
+function rExport(){
+  const el=document.getElementById('tab-exportar');
+  el.innerHTML=`
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.7">Exporta todos os dados em JSON. O ficheiro pode ser reimportado na totalidade sem duplicações.</p>
+    <div class="brow">
+      <button class="btn btn-p" onclick="doExport()">⬇ Descarregar backup completo</button>
+      <button class="btn btn-b" onclick="doExportInc()">⬇ Só incidentes CSV</button>
+    </div>
+    <div class="lbl">resumo da base de dados</div>
+    <div class="card s">${[['Incidentes',DB.incidents.length],['Leituras de glicemia',DB.glucose.length],['Equipamento',DB.equipment.length],['Episódios hospitalares',DB.episodes.length],['Historial médico',DB.history.length],['Consultas',DB.appointments.length],['Medicação crónica',DB.med_base.length],['Medicação temporária',DB.med_temp.length]].map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${v} registos</div></div>`).join('')}</div>`;
+}
+
+async function doExport(){
+  const payload={exportedAt:new Date().toISOString(),version:'2.0',incidentes:DB.incidents,glicemias:DB.glucose,equipamento:DB.equipment,episodiosHospitalares:DB.episodes,historico:DB.history,consultas:DB.appointments,medicacaoCronica:DB.med_base,medicacaoTemporaria:DB.med_temp,perfil:DB.profile};
+  const b=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`caderno-saude-backup-${today()}.json`;a.click();
+  localStorage.setItem(LAST_BACKUP_KEY,Date.now().toString());
+  renderBanners();
+  flash('Backup exportado com sucesso.','ok');
+}
+
+async function doExportInc(){exportSummary();}
+
+// ─── DELETE ───────────────────────────────────────────────────────────────────
+async function doDel(table,id){
+  if(!confirm('Apagar este registo? Não pode ser desfeito.'))return;
+  try{await sbDel(table,id);await loadAll();flash('Apagado.','ok');}
+  catch(e){flash('Erro: '+e.message,'err');}
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────

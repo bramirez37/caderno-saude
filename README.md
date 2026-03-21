@@ -1,106 +1,77 @@
-# Caderno de Saúde 🩺
+# Caderno de Saúde v2 🩺
 
-App pessoal para registo de incidentes médicos — diabetes tipo 1, hipoglicemias, e outros eventos de saúde.
+App pessoal para gestão de saúde — diabetes tipo 1, incidentes médicos, historial clínico completo.
 
 ## Stack
+- **Frontend**: HTML + CSS + JS vanilla (ficheiro único)
+- **Backend**: Supabase (PostgreSQL via REST API)
+- **Deploy**: GitHub Pages ou abrir localmente
 
-- **Frontend**: HTML + CSS + JS vanilla (ficheiro único, sem build)
-- **Backend**: [Supabase](https://supabase.com) (PostgreSQL via REST API)
-- **Deploy**: Abre o `index.html` diretamente no browser
+## Setup rápido
 
-## Setup
+### 1. Supabase — cria o schema
+No SQL Editor do Supabase, corre o ficheiro `migrations/001_full_schema.sql` na íntegra.
+Cria todas as tabelas, índices, RLS e insere o perfil base do Bernardo.
 
-### 1. Supabase
+### 2. GitHub Pages
+Faz upload do `caderno-saude.html` para o repositório e activa GitHub Pages.
 
-Cria o projeto em [supabase.com](https://supabase.com) e corre o seguinte SQL no **SQL Editor**:
+## Tabelas
 
-```sql
-create table if not exists medical_incidents (
-  id text primary key,
-  date date not null,
-  time text,
-  type text not null,
-  type_custom text,
-  severity integer not null check (severity in (1, 2, 3)),
-  sensor_active boolean,
-  symptoms text,
-  action text,
-  recovery_time text,
-  notes text,
-  created_at timestamptz default now()
-);
+| Tabela | Descrição |
+|---|---|
+| `medical_incidents` | Incidentes do dia-a-dia (hipos, hipers, dores...) |
+| `glucose_readings` | Leituras de glicemia |
+| `equipment_log` | Trocas e falhas de sensor/bomba |
+| `hospital_episodes` | Internamentos e urgências com papel |
+| `medical_history` | Historial cronológico de diagnósticos |
+| `medical_appointments` | Consultas médicas + HbA1c |
+| `medications_baseline` | Medicação crónica |
+| `medications_temporary` | Cursos temporários (antibióticos, etc) |
+| `medical_profile` | Perfil base único (alergias, antecedentes...) |
 
-create index if not exists medical_incidents_date_idx
-  on medical_incidents (date desc, time desc);
+## Funcionalidades
 
-alter table medical_incidents enable row level security;
-
-create policy "allow_all" on medical_incidents
-  for all using (true) with check (true);
-```
-
-### 2. Configura o `index.html`
-
-Edita as duas constantes no início do script:
-
-```js
-const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
-const SUPABASE_KEY = 'SUA-ANON-KEY';
-```
-
-> ⚠️ **Nunca commites a anon key para um repositório público.**  
-> Usa um ficheiro `.env` local ou guarda o HTML fora do repo se for público.
-
-### 3. Abre no browser
-
-```
-open index.html
-```
-
-Não precisa de servidor. Abre direto no browser.
-
-## Campos de cada incidente
-
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `id` | text | Identificador único (`inc-TIMESTAMP`) |
-| `date` | date | Data (YYYY-MM-DD) |
-| `time` | text | Hora (HH:MM) |
-| `type` | text | Tipo de incidente (ver lista abaixo) |
-| `typeCustom` | text | Descrição livre se `type = "Outro"` |
-| `severity` | int | 1=Leve, 2=Moderado, 3=Grave |
-| `sensorActive` | bool | Sensor de glicose ativo? (true/false/null) |
-| `symptoms` | text | O que sentiu |
-| `action` | text | O que fez |
-| `recoveryTime` | text | Tempo a recuperar |
-| `notes` | text | Notas adicionais |
-
-**Tipos disponíveis**: Hipoglicemia, Hiperglicemia, Dor aguda, Tontura/desmaio, Reação adversa, Crise de pressão, Problema cardíaco, Reação alérgica, Outro.
+- **Dashboard** — glicemia atual, medicação ativa com countdown, próxima consulta
+- **Incidentes** — com duração, glicemia, acetonas, sick day flag, trigger
+- **Vista resumo** — últimos 10/20/50 em tabela + export CSV
+- **Episódios hospitalares** — internamentos completos com diagnóstico, procedimentos, alta
+- **Historial** — lista cronológica retroativa de todos os diagnósticos
+- **Medicação** — crónica (lista estática) + temporária (com countdown)
+- **Perfil** — alergias, doenças crónicas, cirurgias, antecedentes familiares
+- **Importar** — preview antes de confirmar, múltiplos JSONs em simultâneo
+- **Exportar** — backup completo com data + CSV de incidentes
+- **Backup reminder** — aviso se não exportares há mais de 7 dias
 
 ## Importar do Claude
 
-Quando reportares um incidente ao Claude, pede o JSON com este formato:
+Quando reportares um episódio, o Claude gera o JSON completo.
+Formato suportado — um objeto com múltiplos arrays:
 
 ```json
 {
-  "id": "inc-1742089800000",
-  "date": "2026-03-16",
-  "time": "03:30",
-  "type": "Hipoglicemia",
-  "typeCustom": "",
-  "severity": 3,
-  "sensorActive": false,
-  "symptoms": "Acordei com sensação de açúcares muito baixos",
-  "action": "Comi tudo o que estava à frente",
-  "recoveryTime": "~1 hora",
-  "notes": "Sensor tinha acabado na véspera."
+  "incidentes": [...],
+  "glicemias": [...],
+  "episodiosHospitalares": [...],
+  "historico": [...],
+  "medicacaoTemporaria": [...]
 }
 ```
 
-Cola no tab **Importar JSON** da app e clica em importar.
+## Historial médico retroativo (lista SNS)
 
-## Contexto
+Para importar a lista de episódios do SNS (das interconsultas), usa:
 
-- Diabetes tipo 1 com sensor de glicose (troca às segundas de manhã)
-- Incidentes podem ser de qualquer tipo médico, não só diabetes
-- App para uso pessoal, sem autenticação (RLS aberta com anon key)
+```json
+{
+  "historico": [
+    {"date": "2023-10-27", "diagnosis": "Retinopatia diabética", "status": "em-seguimento", "source": "SNS"},
+    {"date": "2023-05-16", "diagnosis": "Trastorno depressivo persistente", "status": "crónico", "source": "SNS"},
+    {"date": "2021-03-24", "diagnosis": "Cefaleia em cachos / cluster", "status": "em-seguimento", "source": "SNS"}
+  ]
+}
+```
+
+## Backlog
+
+Ver BACKLOG.md para melhorias planeadas.
