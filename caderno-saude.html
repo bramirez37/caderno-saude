@@ -17,10 +17,41 @@
   --bl:#60a5fa;--bld:rgba(96,165,250,0.1);--blb:rgba(96,165,250,0.25);
   --pu:#a78bfa;--pud:rgba(167,139,250,0.1);--pub:rgba(167,139,250,0.25);
   --radius:10px;--rs:6px;
+  --fs:14px;
+}
+/* ── LIGHT MODE ── */
+body.light{
+  --bg:#f5f6f4;--bg2:#ffffff;--bg3:#eef0ed;--bg4:#e8ebe7;
+  --b:rgba(0,0,0,0.08);--b2:rgba(0,0,0,0.14);--b3:rgba(0,0,0,0.22);
+  --t:#1a1f1b;--t2:#4a5e4c;--t3:#8a9e8c;
+  --g:#16a34a;--gd:rgba(22,163,74,0.08);--gb:rgba(22,163,74,0.22);
+  --a:#b45309;--ad:rgba(180,83,9,0.08);--ab:rgba(180,83,9,0.22);
+  --r:#dc2626;--rd:rgba(220,38,38,0.08);--rb:rgba(220,38,38,0.22);
+  --bl:#1d4ed8;--bld:rgba(29,78,216,0.08);--blb:rgba(29,78,216,0.22);
+  --pu:#7c3aed;--pud:rgba(124,58,237,0.08);--pub:rgba(124,58,237,0.22);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;font-size:14px;line-height:1.6}
-.shell{max-width:740px;margin:0 auto;padding:0 16px 100px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;font-size:var(--fs);line-height:1.6;transition:background .2s,color .2s}
+.shell{max-width:960px;margin:0 auto;padding:0 24px 100px}
+
+/* ── TOOLBAR ── */
+.toolbar{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:6px 24px;margin:0 -24px 0;
+  background:var(--bg);border-bottom:1px solid var(--b);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.toolbar-left{display:flex;align-items:center;gap:6px}
+.toolbar-right{display:flex;align-items:center;gap:6px}
+.ver{font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:.04em;padding:2px 7px;border:1px solid var(--b);border-radius:999px}
+.tbtn{padding:4px 9px;border-radius:var(--rs);font-size:11px;cursor:pointer;border:1px solid var(--b2);background:var(--bg3);color:var(--t2);font-family:'DM Mono',monospace;transition:all .15s;white-space:nowrap}
+.tbtn:hover{color:var(--t);border-color:var(--b3)}
+.tbtn.active{background:var(--gd);color:var(--g);border-color:var(--gb)}
+.fs-ctrl{display:flex;align-items:center;gap:3px}
+.fs-btn{width:26px;height:26px;border-radius:var(--rs);font-size:13px;cursor:pointer;border:1px solid var(--b2);background:var(--bg3);color:var(--t2);display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:'DM Mono',monospace}
+.fs-btn:hover{color:var(--t);border-color:var(--b3)}
+.theme-btn{width:26px;height:26px;border-radius:var(--rs);font-size:13px;cursor:pointer;border:1px solid var(--b2);background:var(--bg3);color:var(--t2);display:flex;align-items:center;justify-content:center;transition:all .15s}
 /* Header */
 .hdr{padding:28px 0 18px;border-bottom:1px solid var(--b);margin-bottom:18px}
 .hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -110,9 +141,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
 .stbl td{padding:7px 8px;border-bottom:1px solid var(--b);color:var(--t2);vertical-align:top}
 .stbl tr:last-child td{border-bottom:none}
 .stbl tr:hover td{background:rgba(255,255,255,0.02)}
+body.light .stbl tr:hover td{background:rgba(0,0,0,0.02)}
+body.light .fg select option{background:#fff;color:#1a1f1b}
+body.light .mono,body.light .dbg{color:var(--t2)}
+body.light .card:hover{border-color:var(--b2)}
 </style>
 </head>
 <body>
+<div class="toolbar">
+  <div class="toolbar-left">
+    <span class="ver">v2.0</span>
+    <div class="dot" id="dot" style="margin-top:0;flex-shrink:0"></div>
+  </div>
+  <div class="toolbar-right">
+    <div class="fs-ctrl">
+      <button class="fs-btn" onclick="changeFontSize(-1)" title="Reduzir letra">A−</button>
+      <button class="fs-btn" onclick="changeFontSize(0)" title="Tamanho padrão" style="font-size:10px">A</button>
+      <button class="fs-btn" onclick="changeFontSize(1)" title="Aumentar letra">A+</button>
+    </div>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Modo claro/escuro">🌙</button>
+  </div>
+</div>
 <div class="shell">
   <div class="hdr">
     <div class="hdr-top">
@@ -120,7 +169,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
         <h1>Caderno de <em>Saúde</em></h1>
         <div class="hdr-sub">bernardo · diabetes tipo 1 · medtronic 780g</div>
       </div>
-      <div class="dot" id="dot"></div>
     </div>
   </div>
   <div id="msg-g"></div>
@@ -929,6 +977,36 @@ async function doDel(table,id){
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
+// ─── THEME AND FONT SIZE ─────────────────────────────────────────────────────
+const FONT_SIZES=[12,13,14,15,16,18];
+let currentFontIdx=2;
+
+function applyFontSize(idx){
+  currentFontIdx=Math.max(0,Math.min(FONT_SIZES.length-1,idx));
+  document.documentElement.style.setProperty('--fs',FONT_SIZES[currentFontIdx]+'px');
+  localStorage.setItem('caderno_fontsize',currentFontIdx);
+}
+
+function changeFontSize(dir){
+  if(dir===0)applyFontSize(2);
+  else applyFontSize(currentFontIdx+dir);
+}
+
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  document.getElementById('theme-btn').textContent=isLight?'☀️':'🌙';
+  localStorage.setItem('caderno_theme',isLight?'light':'dark');
+}
+
+function initPrefs(){
+  const t=localStorage.getItem('caderno_theme');
+  if(t==='light'){document.body.classList.add('light');document.getElementById('theme-btn').textContent='☀️';}
+  const f=localStorage.getItem('caderno_fontsize');
+  if(f!==null)applyFontSize(parseInt(f));
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+initPrefs();
 loadAll();
 </script>
 </body>
