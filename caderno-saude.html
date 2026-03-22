@@ -145,6 +145,7 @@ body.light .stbl tr:hover td{background:rgba(0,0,0,0.02)}
 body.light .fg select option{background:#fff;color:#1a1f1b}
 body.light .mono,body.light .dbg{color:var(--t2)}
 body.light .card:hover{border-color:var(--b2)}
+body.light .bz{background:rgba(0,0,0,0.04)}
 </style>
 </head>
 <body>
@@ -217,6 +218,8 @@ const ITYPES=["Hipoglicemia","Hiperglicemia","Dor aguda","Tontura/desmaio","Rea�
 const SEVL={1:"Leve",2:"Moderado",3:"Grave"};
 const SEVB={1:"bg",2:"ba",3:"br"};
 const TYPB={"Hipoglicemia":"br","Hiperglicemia":"ba","Dor aguda":"br","Tontura/desmaio":"ba","Reação adversa":"ba","Crise de pressão":"br","Problema cardíaco":"br","Reação alérgica":"ba","Outro":"bb"};
+const EQP_TYPES=['sensor','bomba','reservatório','cateter','outro'];
+const EQP_EVTS=['troca','falha','alarme','calibração','outro'];
 const LAST_BACKUP_KEY='caderno_last_backup';
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -311,15 +314,12 @@ function renderStats(){
 function renderBanners(){
   const el=document.getElementById('banners');
   const parts=[];
-  // Sick day
   if(DB.incidents.find(i=>i.sickDay&&i.date===today())){
     parts.push(`<div class="banner banner-warn">⚠ Sick day ativo hoje — resistência à insulina aumentada. Verifica basal.</div>`);
   }
-  // Backup
   const lb=localStorage.getItem(LAST_BACKUP_KEY);
   if(lb){const d=Math.floor((Date.now()-parseInt(lb))/86400000);if(d>7)parts.push(`<div class="banner banner-info">💾 Último backup há ${d} dias. Considera exportar.</div>`);}
   else if(DB.incidents.length>0){parts.push(`<div class="banner banner-info">💾 Sem backup registado. Exporta os teus dados.</div>`);}
-  // Meds ending soon
   const ending=DB.med_temp.filter(m=>{const d=dl(m.end_date);return d!==null&&d>=0&&d<=2;});
   ending.forEach(m=>parts.push(`<div class="banner banner-warn">⏳ ${esc(m.name)} termina ${dl(m.end_date)===0?'hoje':dl(m.end_date)===1?'amanhã':'em 2 dias'}.</div>`));
   el.innerHTML=parts.join('');
@@ -764,24 +764,12 @@ function rPerfil(){
   const el=document.getElementById('tab-perfil');
   const p=DB.profile;
   if(formOpen==='perfil'){
-    el.innerHTML=`<div class="card s">
-      <div style="font-size:15px;font-weight:500;margin-bottom:13px">Editar perfil médico</div>
-      <div class="fg"><label>Alergias</label><textarea id="pf-al">${esc(p?.allergies||'')}</textarea></div>
-      <div class="fg"><label>Doenças crónicas</label><textarea id="pf-cc" style="min-height:100px">${esc(p?.chronic_conditions||'')}</textarea></div>
-      <div class="fg"><label>Cirurgias prévias</label><textarea id="pf-sx">${esc(p?.surgeries||'')}</textarea></div>
-      <div class="fg"><label>Antecedentes familiares</label><textarea id="pf-fh">${esc(p?.family_history||'')}</textarea></div>
-      <div class="fg"><label>Hábitos</label><textarea id="pf-hb">${esc(p?.habits||'')}</textarea></div>
-      <div class="fg"><label>Dispositivos ativos</label><textarea id="pf-dv">${esc(p?.active_devices||'')}</textarea></div>
-      <div class="fg"><label>Grupo sanguíneo</label><input type="text" id="pf-bt" value="${esc(p?.blood_type||'')}"></div>
-      <div class="fg"><label>Notas</label><textarea id="pf-nt">${esc(p?.notes||'')}</textarea></div>
-      <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="savePerfil()">Guardar</button><button class="btn" onclick="formOpen=null;rPerfil()">Cancelar</button></div>
-    </div>`;
+    el.innerHTML=`<div class="card s"><div style="font-size:15px;font-weight:500;margin-bottom:13px">Editar perfil médico</div><div class="fg"><label>Alergias</label><textarea id="pf-al">${esc(p?.allergies||'')}</textarea></div><div class="fg"><label>Doenças crónicas</label><textarea id="pf-cc" style="min-height:100px">${esc(p?.chronic_conditions||'')}</textarea></div><div class="fg"><label>Cirurgias prévias</label><textarea id="pf-sx">${esc(p?.surgeries||'')}</textarea></div><div class="fg"><label>Antecedentes familiares</label><textarea id="pf-fh">${esc(p?.family_history||'')}</textarea></div><div class="fg"><label>Hábitos</label><textarea id="pf-hb">${esc(p?.habits||'')}</textarea></div><div class="fg"><label>Dispositivos ativos</label><textarea id="pf-dv">${esc(p?.active_devices||'')}</textarea></div><div class="fg"><label>Grupo sanguíneo</label><input type="text" id="pf-bt" value="${esc(p?.blood_type||'')}"></div><div class="fg"><label>Notas</label><textarea id="pf-nt">${esc(p?.notes||'')}</textarea></div><div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="savePerfil()">Guardar</button><button class="btn" onclick="formOpen=null;rPerfil()">Cancelar</button></div></div>`;
     return;
   }
   if(!p){el.innerHTML=`<div class="brow"><button class="btn btn-p" onclick="openForm('perfil')">Preencher perfil</button></div><div class="empty">Perfil não preenchido.</div>`;return;}
   const fields=[['Alergias',p.allergies],['Doenças crónicas',p.chronic_conditions],['Cirurgias prévias',p.surgeries],['Antecedentes familiares',p.family_history],['Hábitos',p.habits],['Dispositivos ativos',p.active_devices],['Grupo sanguíneo',p.blood_type],['Notas',p.notes]];
-  el.innerHTML=`<div class="brow"><button class="btn" onclick="openForm('perfil')">Editar</button></div>
-    <div class="card s">${fields.filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}</div>`;
+  el.innerHTML=`<div class="brow"><button class="btn" onclick="openForm('perfil')">Editar</button></div><div class="card s">${fields.filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}</div>`;
 }
 
 async function savePerfil(){
@@ -793,8 +781,7 @@ async function savePerfil(){
 // ─── IMPORTAR ─────────────────────────────────────────────────────────────────
 function rImport(){
   const el=document.getElementById('tab-importar');
-  el.innerHTML=`
-    <p style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.7">Cola aqui um ou múltiplos blocos JSON gerados pelo Claude. Podes separar vários JSONs por uma linha em branco ou envolver tudo num array. Aceita: incidentes, glicemias, equipamento, episodiosHospitalares, historico, consultas, medicacaoTemporaria.</p>
+  el.innerHTML=`<p style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.7">Cola aqui um ou múltiplos blocos JSON gerados pelo Claude. Podes separar vários JSONs por uma linha em branco ou envolver tudo num array. Aceita: incidentes, glicemias, equipamento, episodiosHospitalares, historico, consultas, medicacaoTemporaria.</p>
     <div id="msg-imp"></div>
     <div id="preview-imp"></div>
     <textarea id="ji" style="width:100%;min-height:200px;padding:10px;border:1px solid var(--b2);border-radius:var(--rs);background:var(--bg3);color:var(--t);font-family:'DM Mono',monospace;font-size:11px;resize:vertical" placeholder='Cole aqui o JSON do Claude...'></textarea>
@@ -811,6 +798,7 @@ function rImport(){
     "sickDay":true,"glucoseAtEvent":310,"ketones":"negativo","location":"hospital",
     "trigger":"doença","symptoms":"...","action":"...","medicationNote":"basal +30%"}],
   "glicemias": [{"datetime":"2026-03-20T14:00:00","value_mgdl":310,"context":"sick-day","source":"picada"}],
+  "equipamento": [{"date":"2026-03-20","equipment_type":"sensor","event_type":"troca","equipment_model":"Guardian 4","notes":"..."}],
   "episodiosHospitalares": [{"date_in":"2026-03-20","date_out":"2026-03-21",
     "hospital":"Hospital La Paz","service":"ORL","episode_type":"urgente",
     "diagnosis":"Flemão periamigdalino esquerdo","glucose_at_admission":373,"hba1c_at_admission":7.5}],
@@ -832,7 +820,6 @@ function previewImport(){
   document.getElementById('btn-confirm-import').style.display='none';
   if(!raw){msgEl.innerHTML='<div class="msg msg-err">Cola o JSON primeiro.</div>';return;}
 
-  // Tenta separar múltiplos JSONs por linha em branco
   const blocks=raw.split(/\n\s*\n/).map(b=>b.trim()).filter(b=>b.startsWith('{')&&b.endsWith('}'));
   const jsons=blocks.length>1?blocks:[raw];
 
@@ -844,7 +831,6 @@ function previewImport(){
     try{
       const p=JSON.parse(j);
       parsed.push(p);
-      // conta por tipo
       if(Array.isArray(p)){p.forEach(item=>{if(item.date&&item.type)counts.incidentes++;});}
       else{
         if(p.incidentes)counts.incidentes+=p.incidentes.length;
@@ -852,13 +838,14 @@ function previewImport(){
         if(p.glicemias)counts.glicemias+=p.glicemias.length;
         if(p.glucose)counts.glicemias+=p.glucose.length;
         if(p.equipamento)counts.equipamento+=p.equipamento.length;
+        if(p.equipment_log)counts.equipamento+=p.equipment_log.length;
         if(p.episodiosHospitalares)counts.episodios+=p.episodiosHospitalares.length;
         if(p.hospital_episodes)counts.episodios+=p.hospital_episodes.length;
         if(p.historico)counts.historico+=p.historico.length;
         if(p.medical_history)counts.historico+=p.medical_history.length;
         if(p.consultas)counts.consultas+=p.consultas.length;
         if(p.medicacaoTemporaria)counts.medTemp+=p.medicacaoTemporaria.length;
-        if(p.date&&p.type){counts.incidentes++;} // objeto único incidente
+        if(p.date&&p.type){counts.incidentes++;}
       }
     }catch(e){erros.push('Bloco inválido: '+e.message);}
   }
@@ -884,7 +871,7 @@ async function confirmImport(){
   let saved=0,erros=[];
 
   for(const p of pendingImport){
-    // Incidentes — objeto único ou array direto
+    // Incidentes
     let il=[];
     if(Array.isArray(p))il=p.filter(x=>x.date&&x.type);
     else if(p.date&&p.type)il=[p];
@@ -903,6 +890,21 @@ async function confirmImport(){
       if(!g.datetime&&!g.value_mgdl)continue;
       try{const dt=g.datetime?new Date(g.datetime).toISOString():new Date().toISOString();await sbUp('glucose_readings',{id:g.id||uid('glu'),datetime:dt,value_mgdl:parseInt(g.value_mgdl),context:g.context||null,source:g.source||null,sensor_model:g.sensor_model||null,notes:g.notes||null,incident_id:g.incident_id||null});saved++;}
       catch(e){erros.push('Glu: '+e.message);}
+    }
+
+    // ── BUG #1 FIX: Equipamento ──────────────────────────────────────────────
+    for(const e of(p.equipamento||p.equipment_log||[])){
+      if(!e.date)continue;
+      try{await sbUp('equipment_log',{
+        id:e.id||uid('eqp'),
+        date:e.date,
+        time:e.time||null,
+        equipment_type:EQP_TYPES.includes(e.equipment_type)?e.equipment_type:'outro',
+        equipment_model:e.equipment_model||null,
+        event_type:EQP_EVTS.includes(e.event_type)?e.event_type:'outro',
+        notes:e.notes||null
+      });saved++;}
+      catch(e2){erros.push('Eqp: '+e2.message);}
     }
 
     // Episódios hospitalares
@@ -948,8 +950,7 @@ async function confirmImport(){
 // ─── EXPORTAR ─────────────────────────────────────────────────────────────────
 function rExport(){
   const el=document.getElementById('tab-exportar');
-  el.innerHTML=`
-    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.7">Exporta todos os dados em JSON. O ficheiro pode ser reimportado na totalidade sem duplicações.</p>
+  el.innerHTML=`<p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.7">Exporta todos os dados em JSON. O ficheiro pode ser reimportado na totalidade sem duplicações.</p>
     <div class="brow">
       <button class="btn btn-p" onclick="doExport()">⬇ Descarregar backup completo</button>
       <button class="btn btn-b" onclick="doExportInc()">⬇ Só incidentes CSV</button>
@@ -976,13 +977,13 @@ async function doDel(table,id){
   catch(e){flash('Erro: '+e.message,'err');}
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-// ─── THEME AND FONT SIZE ─────────────────────────────────────────────────────
+// ─── THEME AND FONT SIZE ──────────────────────────────────────────────────────
 const FONT_SIZES=[12,13,14,15,16,18];
 let currentFontIdx=2;
 
 function applyFontSize(idx){
   currentFontIdx=Math.max(0,Math.min(FONT_SIZES.length-1,idx));
+  // BUG #2 FIX: usar '--fs' (dois hífens) em vez de '–fs' (en dash)
   document.documentElement.style.setProperty('--fs',FONT_SIZES[currentFontIdx]+'px');
   localStorage.setItem('caderno_fontsize',currentFontIdx);
 }
