@@ -6,7 +6,6 @@
 <title>Caderno de Saúde · Bernardo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 <style>
 /* ── DARK THEME (default) ───────────────────────────────────────────── */
 :root{
@@ -162,7 +161,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
       <div class="hdr-left">
         <div>
           <h1>Caderno de <em>Saúde</em></h1>
-          <div class="hdr-sub">bernardo · diabetes tipo 1 · medtronic 780g</div>
+          <div class="hdr-sub">bernardo · diabetes tipo 1 · medtronic 780g · <span style="color:var(--g)">v2.5</span></div>
         </div>
       </div>
       <div class="hdr-right">
@@ -866,11 +865,7 @@ async function dgCompress(file){
   let processFile=file;
   const isHeic=/\.(heic|heif)$/i.test(file.name)||file.type==='image/heic'||file.type==='image/heif';
   if(isHeic){
-    if(typeof heic2any==='undefined')throw new Error('Biblioteca de conversão HEIC não carregou. Refresca a página.');
-    try{
-      const blob=await heic2any({blob:file,toType:'image/jpeg',quality:0.85});
-      processFile=new File([blob],file.name.replace(/\.(heic|heif)$/i,'.jpg'),{type:'image/jpeg'});
-    }catch(e){throw new Error('Não foi possível converter o ficheiro HEIC: '+e.message);}
+    throw new Error(`Ficheiros HEIC não são suportados pelo browser.\n\nNo iPhone: Definições → Câmara → Formatos → "Maior Compatibilidade". As fotos passam a sair em JPEG automaticamente.`);
   }
   return new Promise((resolve,reject)=>{
     const img=new Image();
