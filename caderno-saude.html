@@ -17,41 +17,10 @@
   --bl:#60a5fa;--bld:rgba(96,165,250,0.1);--blb:rgba(96,165,250,0.25);
   --pu:#a78bfa;--pud:rgba(167,139,250,0.1);--pub:rgba(167,139,250,0.25);
   --radius:10px;--rs:6px;
-  --fs:14px;
-}
-/* ── LIGHT MODE ── */
-body.light{
-  --bg:#f5f6f4;--bg2:#ffffff;--bg3:#eef0ed;--bg4:#e8ebe7;
-  --b:rgba(0,0,0,0.08);--b2:rgba(0,0,0,0.14);--b3:rgba(0,0,0,0.22);
-  --t:#1a1f1b;--t2:#4a5e4c;--t3:#8a9e8c;
-  --g:#16a34a;--gd:rgba(22,163,74,0.08);--gb:rgba(22,163,74,0.22);
-  --a:#b45309;--ad:rgba(180,83,9,0.08);--ab:rgba(180,83,9,0.22);
-  --r:#dc2626;--rd:rgba(220,38,38,0.08);--rb:rgba(220,38,38,0.22);
-  --bl:#1d4ed8;--bld:rgba(29,78,216,0.08);--blb:rgba(29,78,216,0.22);
-  --pu:#7c3aed;--pud:rgba(124,58,237,0.08);--pub:rgba(124,58,237,0.22);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;font-size:var(--fs);line-height:1.6;transition:background .2s,color .2s}
-.shell{max-width:960px;margin:0 auto;padding:0 24px 100px}
-
-/* ── TOOLBAR ── */
-.toolbar{
-  position:sticky;top:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:6px 24px;margin:0 -24px 0;
-  background:var(--bg);border-bottom:1px solid var(--b);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-}
-.toolbar-left{display:flex;align-items:center;gap:6px}
-.toolbar-right{display:flex;align-items:center;gap:6px}
-.ver{font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:.04em;padding:2px 7px;border:1px solid var(--b);border-radius:999px}
-.tbtn{padding:4px 9px;border-radius:var(--rs);font-size:11px;cursor:pointer;border:1px solid var(--b2);background:var(--bg3);color:var(--t2);font-family:'DM Mono',monospace;transition:all .15s;white-space:nowrap}
-.tbtn:hover{color:var(--t);border-color:var(--b3)}
-.tbtn.active{background:var(--gd);color:var(--g);border-color:var(--gb)}
-.fs-ctrl{display:flex;align-items:center;gap:3px}
-.fs-btn{width:26px;height:26px;border-radius:var(--rs);font-size:13px;cursor:pointer;border:1px solid var(--b2);background:var(--bg3);color:var(--t2);display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:'DM Mono',monospace}
-.fs-btn:hover{color:var(--t);border-color:var(--b3)}
-.theme-btn{width:26px;height:26px;border-radius:var(--rs);font-size:13px;cursor:pointer;border:1px solid var(--b2);background:var(--bg3);color:var(--t2);display:flex;align-items:center;justify-content:center;transition:all .15s}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;font-size:14px;line-height:1.6}
+.shell{max-width:740px;margin:0 auto;padding:0 16px 100px}
 /* Header */
 .hdr{padding:28px 0 18px;border-bottom:1px solid var(--b);margin-bottom:18px}
 .hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -141,28 +110,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
 .stbl td{padding:7px 8px;border-bottom:1px solid var(--b);color:var(--t2);vertical-align:top}
 .stbl tr:last-child td{border-bottom:none}
 .stbl tr:hover td{background:rgba(255,255,255,0.02)}
-body.light .stbl tr:hover td{background:rgba(0,0,0,0.02)}
-body.light .fg select option{background:#fff;color:#1a1f1b}
-body.light .mono,body.light .dbg{color:var(--t2)}
-body.light .card:hover{border-color:var(--b2)}
-body.light .bz{background:rgba(0,0,0,0.04)}
 </style>
 </head>
 <body>
-<div class="toolbar">
-  <div class="toolbar-left">
-    <span class="ver">v2.1</span>
-    <div class="dot" id="dot" style="margin-top:0;flex-shrink:0"></div>
-  </div>
-  <div class="toolbar-right">
-    <div class="fs-ctrl">
-      <button class="fs-btn" onclick="changeFontSize(-1)" title="Reduzir letra">A−</button>
-      <button class="fs-btn" onclick="changeFontSize(0)" title="Tamanho padrão" style="font-size:10px">A</button>
-      <button class="fs-btn" onclick="changeFontSize(1)" title="Aumentar letra">A+</button>
-    </div>
-    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Modo claro/escuro">🌙</button>
-  </div>
-</div>
 <div class="shell">
   <div class="hdr">
     <div class="hdr-top">
@@ -170,6 +120,7 @@ body.light .bz{background:rgba(0,0,0,0.04)}
         <h1>Caderno de <em>Saúde</em></h1>
         <div class="hdr-sub">bernardo · diabetes tipo 1 · medtronic 780g</div>
       </div>
+      <div class="dot" id="dot"></div>
     </div>
   </div>
   <div id="msg-g"></div>
@@ -190,6 +141,7 @@ body.light .bz{background:rgba(0,0,0,0.04)}
     <button class="nb" onclick="goTab('consultas')">Consultas</button>
     <button class="nb" onclick="goTab('medicacao')">Medicação</button>
     <button class="nb" onclick="goTab('perfil')">Perfil</button>
+    <button class="nb" onclick="goTab('digitalizar')">Digitalizar</button>
     <button class="nb" onclick="goTab('importar')">Importar</button>
     <button class="nb" onclick="goTab('exportar')">Exportar</button>
   </div>
@@ -202,6 +154,7 @@ body.light .bz{background:rgba(0,0,0,0.04)}
   <div id="tab-consultas" style="display:none"></div>
   <div id="tab-medicacao" style="display:none"></div>
   <div id="tab-perfil" style="display:none"></div>
+  <div id="tab-digitalizar" style="display:none"></div>
   <div id="tab-importar" style="display:none"></div>
   <div id="tab-exportar" style="display:none"></div>
 </div>
@@ -218,8 +171,6 @@ const ITYPES=["Hipoglicemia","Hiperglicemia","Dor aguda","Tontura/desmaio","Rea�
 const SEVL={1:"Leve",2:"Moderado",3:"Grave"};
 const SEVB={1:"bg",2:"ba",3:"br"};
 const TYPB={"Hipoglicemia":"br","Hiperglicemia":"ba","Dor aguda":"br","Tontura/desmaio":"ba","Reação adversa":"ba","Crise de pressão":"br","Problema cardíaco":"br","Reação alérgica":"ba","Outro":"bb"};
-const EQP_TYPES=['sensor','bomba','reservatório','cateter','outro'];
-const EQP_EVTS=['troca','falha','alarme','calibração','outro'];
 const LAST_BACKUP_KEY='caderno_last_backup';
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -314,19 +265,22 @@ function renderStats(){
 function renderBanners(){
   const el=document.getElementById('banners');
   const parts=[];
+  // Sick day
   if(DB.incidents.find(i=>i.sickDay&&i.date===today())){
     parts.push(`<div class="banner banner-warn">⚠ Sick day ativo hoje — resistência à insulina aumentada. Verifica basal.</div>`);
   }
+  // Backup
   const lb=localStorage.getItem(LAST_BACKUP_KEY);
   if(lb){const d=Math.floor((Date.now()-parseInt(lb))/86400000);if(d>7)parts.push(`<div class="banner banner-info">💾 Último backup há ${d} dias. Considera exportar.</div>`);}
   else if(DB.incidents.length>0){parts.push(`<div class="banner banner-info">💾 Sem backup registado. Exporta os teus dados.</div>`);}
+  // Meds ending soon
   const ending=DB.med_temp.filter(m=>{const d=dl(m.end_date);return d!==null&&d>=0&&d<=2;});
   ending.forEach(m=>parts.push(`<div class="banner banner-warn">⏳ ${esc(m.name)} termina ${dl(m.end_date)===0?'hoje':dl(m.end_date)===1?'amanhã':'em 2 dias'}.</div>`));
   el.innerHTML=parts.join('');
 }
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const TABS=['dashboard','incidentes','glicemia','episodios','historico','equipamento','consultas','medicacao','perfil','importar','exportar'];
+const TABS=['dashboard','incidentes','glicemia','episodios','historico','equipamento','consultas','medicacao','perfil','digitalizar','importar','exportar'];
 function goTab(name){
   curTab=name;detId=null;formOpen=null;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
@@ -335,7 +289,7 @@ function goTab(name){
   renderCurrent();
 }
 function renderCurrent(){
-  const fn={dashboard:rDash,incidentes:rInc,glicemia:rGlu,episodios:rEp,historico:rHist,equipamento:rEqp,consultas:rApt,medicacao:rMed,perfil:rPerfil,importar:rImport,exportar:rExport};
+  const fn={dashboard:rDash,incidentes:rInc,glicemia:rGlu,episodios:rEp,historico:rHist,equipamento:rEqp,consultas:rApt,medicacao:rMed,perfil:rPerfil,digitalizar:rDigitalizar,importar:rImport,exportar:rExport};
   if(fn[curTab])fn[curTab]();
 }
 function openForm(t){formOpen=t;renderCurrent();setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),50);}
@@ -764,12 +718,24 @@ function rPerfil(){
   const el=document.getElementById('tab-perfil');
   const p=DB.profile;
   if(formOpen==='perfil'){
-    el.innerHTML=`<div class="card s"><div style="font-size:15px;font-weight:500;margin-bottom:13px">Editar perfil médico</div><div class="fg"><label>Alergias</label><textarea id="pf-al">${esc(p?.allergies||'')}</textarea></div><div class="fg"><label>Doenças crónicas</label><textarea id="pf-cc" style="min-height:100px">${esc(p?.chronic_conditions||'')}</textarea></div><div class="fg"><label>Cirurgias prévias</label><textarea id="pf-sx">${esc(p?.surgeries||'')}</textarea></div><div class="fg"><label>Antecedentes familiares</label><textarea id="pf-fh">${esc(p?.family_history||'')}</textarea></div><div class="fg"><label>Hábitos</label><textarea id="pf-hb">${esc(p?.habits||'')}</textarea></div><div class="fg"><label>Dispositivos ativos</label><textarea id="pf-dv">${esc(p?.active_devices||'')}</textarea></div><div class="fg"><label>Grupo sanguíneo</label><input type="text" id="pf-bt" value="${esc(p?.blood_type||'')}"></div><div class="fg"><label>Notas</label><textarea id="pf-nt">${esc(p?.notes||'')}</textarea></div><div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="savePerfil()">Guardar</button><button class="btn" onclick="formOpen=null;rPerfil()">Cancelar</button></div></div>`;
+    el.innerHTML=`<div class="card s">
+      <div style="font-size:15px;font-weight:500;margin-bottom:13px">Editar perfil médico</div>
+      <div class="fg"><label>Alergias</label><textarea id="pf-al">${esc(p?.allergies||'')}</textarea></div>
+      <div class="fg"><label>Doenças crónicas</label><textarea id="pf-cc" style="min-height:100px">${esc(p?.chronic_conditions||'')}</textarea></div>
+      <div class="fg"><label>Cirurgias prévias</label><textarea id="pf-sx">${esc(p?.surgeries||'')}</textarea></div>
+      <div class="fg"><label>Antecedentes familiares</label><textarea id="pf-fh">${esc(p?.family_history||'')}</textarea></div>
+      <div class="fg"><label>Hábitos</label><textarea id="pf-hb">${esc(p?.habits||'')}</textarea></div>
+      <div class="fg"><label>Dispositivos ativos</label><textarea id="pf-dv">${esc(p?.active_devices||'')}</textarea></div>
+      <div class="fg"><label>Grupo sanguíneo</label><input type="text" id="pf-bt" value="${esc(p?.blood_type||'')}"></div>
+      <div class="fg"><label>Notas</label><textarea id="pf-nt">${esc(p?.notes||'')}</textarea></div>
+      <div class="brow" style="margin-top:4px;margin-bottom:0"><button class="btn btn-p" onclick="savePerfil()">Guardar</button><button class="btn" onclick="formOpen=null;rPerfil()">Cancelar</button></div>
+    </div>`;
     return;
   }
   if(!p){el.innerHTML=`<div class="brow"><button class="btn btn-p" onclick="openForm('perfil')">Preencher perfil</button></div><div class="empty">Perfil não preenchido.</div>`;return;}
   const fields=[['Alergias',p.allergies],['Doenças crónicas',p.chronic_conditions],['Cirurgias prévias',p.surgeries],['Antecedentes familiares',p.family_history],['Hábitos',p.habits],['Dispositivos ativos',p.active_devices],['Grupo sanguíneo',p.blood_type],['Notas',p.notes]];
-  el.innerHTML=`<div class="brow"><button class="btn" onclick="openForm('perfil')">Editar</button></div><div class="card s">${fields.filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}</div>`;
+  el.innerHTML=`<div class="brow"><button class="btn" onclick="openForm('perfil')">Editar</button></div>
+    <div class="card s">${fields.filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}</div>`;
 }
 
 async function savePerfil(){
@@ -778,10 +744,256 @@ async function savePerfil(){
   catch(e){flash('Erro: '+e.message,'err');}
 }
 
+// ─── DIGITALIZAR ──────────────────────────────────────────────────────────────
+let pendingExtraction=null;
+
+function rDigitalizar(){
+  const el=document.getElementById('tab-digitalizar');
+  const apiKey=localStorage.getItem('caderno_anthropic_key')||'';
+  el.innerHTML=`
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.7">Tira uma foto a um documento médico em papel — receita, informe clínico, resultado de análise. A IA lê o documento, extrai o que é relevante e propõe o que guardar. Tu confirmas antes de qualquer coisa ser gravada.</p>
+    <div class="card s" style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">Chave API Anthropic</div>
+      <div style="display:flex;gap:8px">
+        <input type="password" id="dg-key" placeholder="sk-ant-..." style="flex:1;padding:8px 10px;border:1px solid var(--b2);border-radius:var(--rs);font-size:13px;background:var(--bg3);color:var(--t);font-family:'DM Mono',monospace" value="${esc(apiKey)}">
+        <button class="btn" onclick="saveApiKey()">Guardar</button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-top:5px">Guardada só neste browser. Não vai a nenhum servidor nosso.</div>
+    </div>
+    ${!apiKey?`<div class="banner banner-warn">⚠ Configura a chave API acima antes de digitalizar.</div>`:''}
+    <div class="lbl">documento</div>
+    <div id="dg-drop" style="border:2px dashed var(--b2);border-radius:var(--radius);padding:36px 16px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:14px"
+         onclick="document.getElementById('dg-file').click()"
+         ondragover="event.preventDefault();this.style.borderColor='var(--gb)'"
+         ondragleave="this.style.borderColor='var(--b2)'"
+         ondrop="event.preventDefault();this.style.borderColor='var(--b2)';dgHandleDrop(event)">
+      <div style="font-size:36px;margin-bottom:8px">📄</div>
+      <div style="font-size:13px;color:var(--t2)">Clica ou arrasta uma foto aqui</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">JPG · PNG · HEIC</div>
+      <input type="file" id="dg-file" accept="image/*" style="display:none" onchange="dgHandleFile(event)">
+    </div>
+    <div id="dg-preview"></div>
+    <div id="dg-result"></div>`;
+}
+
+function saveApiKey(){
+  const k=document.getElementById('dg-key').value.trim();
+  if(!k){flash('Chave vazia.','err');return;}
+  localStorage.setItem('caderno_anthropic_key',k);
+  flash('Chave guardada.','ok');
+  rDigitalizar();
+}
+
+function dgHandleDrop(e){const f=e.dataTransfer.files[0];if(f)dgProcess(f);}
+function dgHandleFile(e){const f=e.target.files[0];if(f)dgProcess(f);}
+
+async function dgCompress(file){
+  return new Promise(resolve=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const MAX=1400;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl=c.toDataURL('image/jpeg',0.82);
+      URL.revokeObjectURL(url);
+      resolve({dataUrl,base64:dataUrl.split(',')[1],size:Math.round(dataUrl.length*0.75)});
+    };
+    img.src=url;
+  });
+}
+
+async function dgProcess(file){
+  if(file.size>15*1024*1024){flash('Ficheiro demasiado grande (máx 15MB).','err');return;}
+  const pre=document.getElementById('dg-preview');
+  pre.innerHTML=`<div class="card s" style="margin-bottom:14px;text-align:center;padding:20px;color:var(--t2)">A processar imagem…</div>`;
+  const comp=await dgCompress(file);
+  window._dgB64=comp.base64;
+  pre.innerHTML=`<div class="card s" style="margin-bottom:14px">
+    <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+      <img src="${comp.dataUrl}" style="max-width:180px;max-height:260px;border-radius:var(--rs);border:1px solid var(--b);flex-shrink:0" alt="doc">
+      <div style="flex:1;min-width:140px">
+        <div style="font-size:13px;font-weight:500;margin-bottom:5px">${esc(file.name)}</div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:12px">
+          Original: ${(file.size/1024).toFixed(0)}KB → Enviado: ${(comp.size/1024).toFixed(0)}KB
+        </div>
+        <div class="brow" style="margin-bottom:0">
+          <button class="btn btn-p" onclick="dgAnalyze()">🔍 Analisar com IA</button>
+          <button class="btn" onclick="document.getElementById('dg-preview').innerHTML='';document.getElementById('dg-result').innerHTML='';window._dgB64=null">Limpar</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('dg-result').innerHTML='';
+}
+
+async function dgAnalyze(){
+  const apiKey=localStorage.getItem('caderno_anthropic_key');
+  if(!apiKey){flash('Configura a chave API primeiro.','err');return;}
+  if(!window._dgB64){flash('Carrega um documento primeiro.','err');return;}
+  const resEl=document.getElementById('dg-result');
+  resEl.innerHTML=`<div class="card s"><div style="text-align:center;padding:24px;color:var(--t2)">🔍 A analisar… pode demorar alguns segundos.</div></div>`;
+  const sys=`És um assistente especializado em digitalização de documentos clínicos em português e espanhol do Hospital La Paz / Madrid.
+
+Analisa o documento e extrai apenas dados clinicamente relevantes. Sê conservador — só extrais o que está claramente visível.
+
+REGRAS CRÍTICAS:
+- Requisições de exames (volantes) são pedidos ainda por fazer. NÃO têm resultados. Não as registas como se tivessem.
+- Datas em formato YYYY-MM-DD.
+- Nunca inventas valores.
+- Ignora: códigos de barras, números de processo, assinaturas, endereços, texto legal no rodapé.
+
+RESPONDE APENAS COM JSON VÁLIDO, sem markdown, sem texto extra antes ou depois:
+{
+  "tipo_documento": "requisicao|analitica|consulta|alta_hospitalar|imagiologia|outro",
+  "data_documento": "YYYY-MM-DD ou null",
+  "medico": "nome ou null",
+  "hospital": "nome ou null",
+  "especialidade": "nome ou null",
+  "resumo": "1-2 frases descrevendo o documento e o que contém",
+  "extrair": {
+    "consultas": [{"date":"YYYY-MM-DD","specialty":"...","doctor":"...","hospital":"...","notes":"resumo clínico relevante"}],
+    "historico": [{"date":"YYYY-MM-DD","diagnosis":"...","status":"ativo|crónico|em-seguimento|resolvido","source":"SNS|privado|auto|outro","specialty":"...","notes":"..."}],
+    "medicacaoTemporaria": [{"name":"...","dose":"...","frequency":"...","start_date":"YYYY-MM-DD","duration_days":N,"reason":"...","notes":"..."}],
+    "medicacaoCronica": [{"name":"...","dose":"...","frequency":"...","device":"...","notes":"..."}],
+    "episodiosHospitalares": [{"date_in":"YYYY-MM-DD","date_out":"YYYY-MM-DD ou null","hospital":"...","service":"...","doctor":"...","episode_type":"urgente|programado|consulta|cirurgia|outro","diagnosis":"...","notes":"..."}]
+  },
+  "notas_adicionais": "observações importantes não capturadas acima, ou null"
+}
+
+Omite secções com arrays vazios. Para requisições, o resumo deve dizer que são pedidos ainda por realizar.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        system:sys,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:window._dgB64}},
+          {type:'text',text:'Analisa este documento médico e devolve o JSON.'}
+        ]}]
+      })
+    });
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'Erro API '+r.status);}
+    const data=await r.json();
+    const txt=data.content[0].text.trim();
+    let ex;
+    try{ex=JSON.parse(txt);}
+    catch{const m=txt.match(/\{[\s\S]*\}/);if(m)ex=JSON.parse(m[0]);else throw new Error('Resposta não é JSON válido');}
+    pendingExtraction=ex;
+    dgRenderResult(ex);
+  }catch(e){resEl.innerHTML=`<div class="msg msg-err">Erro: ${esc(e.message)}</div>`;}
+}
+
+function dgRenderResult(ex){
+  const resEl=document.getElementById('dg-result');
+  const {tipo_documento,data_documento,medico,hospital,resumo,extrair,notas_adicionais}=ex;
+  const tipoBadge={requisicao:'ba',analitica:'bg',consulta:'bb',alta_hospitalar:'br',imagiologia:'bp',outro:'bz'};
+  let secs='';
+  const ext=extrair||{};
+
+  if(ext.consultas?.length){
+    secs+=`<div class="lbl">consultas (${ext.consultas.length})</div>`;
+    ext.consultas.forEach(c=>{secs+=`<div class="card s" style="margin-bottom:6px">
+      ${[['Data',c.date||'—'],['Especialidade',c.specialty||'—'],['Médico',c.doctor||'—'],['Hospital',c.hospital||'—'],['Notas',c.notes||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
+    </div>`;});
+  }
+  if(ext.historico?.length){
+    secs+=`<div class="lbl">historial / diagnósticos (${ext.historico.length})</div>`;
+    ext.historico.forEach(h=>{secs+=`<div class="card s" style="margin-bottom:6px">
+      ${[['Diagnóstico',h.diagnosis||'—'],['Data',h.date||'—'],['Status',h.status||'ativo'],['Especialidade',h.specialty||''],['Notas',h.notes||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
+    </div>`;});
+  }
+  if(ext.medicacaoTemporaria?.length){
+    secs+=`<div class="lbl">medicação temporária (${ext.medicacaoTemporaria.length})</div>`;
+    ext.medicacaoTemporaria.forEach(m=>{secs+=`<div class="card s" style="margin-bottom:6px">
+      ${[['Nome',m.name||'—'],['Dose/freq.',[m.dose,m.frequency].filter(Boolean).join(' · ')||'—'],['Início',m.start_date||'—'],['Duração',m.duration_days?m.duration_days+' dias':''],['Razão',m.reason||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
+    </div>`;});
+  }
+  if(ext.medicacaoCronica?.length){
+    secs+=`<div class="lbl">medicação crónica (${ext.medicacaoCronica.length})</div>`;
+    ext.medicacaoCronica.forEach(m=>{secs+=`<div class="card s" style="margin-bottom:6px">
+      ${[['Nome',m.name||'—'],['Dose/freq.',[m.dose,m.frequency].filter(Boolean).join(' · ')||'—'],['Dispositivo',m.device||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
+    </div>`;});
+  }
+  if(ext.episodiosHospitalares?.length){
+    secs+=`<div class="lbl">episódios hospitalares (${ext.episodiosHospitalares.length})</div>`;
+    ext.episodiosHospitalares.forEach(e=>{secs+=`<div class="card s" style="margin-bottom:6px">
+      ${[['Hospital',e.hospital||'—'],['Diagnóstico',e.diagnosis||'—'],['Entrada',e.date_in||'—'],['Alta',e.date_out||''],['Serviço',e.service||''],['Médico',e.doctor||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
+    </div>`;});
+  }
+
+  const hasData=Object.values(ext).some(v=>v?.length>0);
+  resEl.innerHTML=`
+    <div class="card s" style="margin-bottom:14px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <span class="badge ${tipoBadge[tipo_documento]||'bz'}">${tipo_documento||'outro'}</span>
+        ${data_documento?`<span class="badge bz">${data_documento}</span>`:''}
+        ${hospital?`<span class="badge bz">${esc(hospital)}</span>`:''}
+        ${medico?`<span style="font-size:12px;color:var(--t3)">${esc(medico)}</span>`:''}
+      </div>
+      ${resumo?`<div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:${notas_adicionais?'10px':'0'}">${esc(resumo)}</div>`:''}
+      ${notas_adicionais?`<div class="banner banner-warn" style="margin-bottom:0">📌 ${esc(notas_adicionais)}</div>`:''}
+    </div>
+    ${hasData?secs:'<div class="msg msg-warn">Nenhum dado clínico para extrair deste documento. Ver resumo acima.</div>'}
+    ${hasData?`<div class="brow">
+      <button class="btn btn-p" onclick="dgConfirm()">✓ Guardar estes dados</button>
+      <button class="btn" onclick="pendingExtraction=null;document.getElementById('dg-result').innerHTML=''">Descartar</button>
+    </div>`:''}
+    <div class="lbl" style="margin-top:14px">json extraído (referência)</div>
+    <div class="mono" style="font-size:10px">${esc(JSON.stringify(ex,null,2))}</div>`;
+}
+
+async function dgConfirm(){
+  if(!pendingExtraction)return;
+  const ext=pendingExtraction.extrair||{};
+  let saved=0,erros=[];
+
+  for(const a of(ext.consultas||[])){
+    if(!a.date)continue;
+    try{await sbUp('medical_appointments',{id:uid('apt'),date:a.date,specialty:a.specialty||'outro',doctor:a.doctor||null,hospital:a.hospital||null,notes:a.notes||null});saved++;}
+    catch(e){erros.push('Consulta: '+e.message);}
+  }
+  for(const h of(ext.historico||[])){
+    if(!h.diagnosis)continue;
+    try{await sbUp('medical_history',{id:uid('hi'),date:h.date||today(),diagnosis:h.diagnosis,status:h.status||'ativo',source:h.source||'SNS',specialty:h.specialty||null,notes:h.notes||null});saved++;}
+    catch(e){erros.push('Historial: '+e.message);}
+  }
+  for(const m of(ext.medicacaoTemporaria||[])){
+    if(!m.name||!m.start_date)continue;
+    let end=m.end_date;
+    if(!end&&m.duration_days&&m.start_date){const d=new Date(m.start_date);d.setDate(d.getDate()+parseInt(m.duration_days)-1);end=d.toISOString().slice(0,10);}
+    try{await sbUp('medications_temporary',{id:uid('mt'),name:m.name,dose:m.dose||null,frequency:m.frequency||null,start_date:m.start_date,end_date:end||null,duration_days:m.duration_days||null,reason:m.reason||null,notes:m.notes||null});saved++;}
+    catch(e){erros.push('MedTemp: '+e.message);}
+  }
+  for(const m of(ext.medicacaoCronica||[])){
+    if(!m.name)continue;
+    try{await sbUp('medications_baseline',{id:uid('mb'),name:m.name,dose:m.dose||null,frequency:m.frequency||null,device:m.device||null,notes:m.notes||null,active:true});saved++;}
+    catch(e){erros.push('MedBase: '+e.message);}
+  }
+  for(const ep of(ext.episodiosHospitalares||[])){
+    if(!ep.date_in||!ep.hospital)continue;
+    try{await sbUp('hospital_episodes',{id:uid('ep'),date_in:ep.date_in,date_out:ep.date_out||null,hospital:ep.hospital,service:ep.service||null,doctor:ep.doctor||null,episode_type:ep.episode_type||'outro',diagnosis:ep.diagnosis||null,notes:ep.notes||null});saved++;}
+    catch(e){erros.push('Ep: '+e.message);}
+  }
+
+  pendingExtraction=null;
+  await loadAll();
+  flash(saved>0?`${saved} registo(s) guardado(s)${erros.length?' ('+erros.length+' erro(s).)':''}. `:'Nenhum registo guardado.'+erros.join(' '),saved>0?(erros.length?'warn':'ok'):'err');
+  document.getElementById('dg-result').innerHTML='';
+  document.getElementById('dg-preview').innerHTML='';
+  window._dgB64=null;
+}
+
 // ─── IMPORTAR ─────────────────────────────────────────────────────────────────
 function rImport(){
   const el=document.getElementById('tab-importar');
-  el.innerHTML=`<p style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.7">Cola aqui um ou múltiplos blocos JSON gerados pelo Claude. Podes separar vários JSONs por uma linha em branco ou envolver tudo num array. Aceita: incidentes, glicemias, equipamento, episodiosHospitalares, historico, consultas, medicacaoTemporaria.</p>
+  el.innerHTML=`
+    <p style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.7">Cola aqui um ou múltiplos blocos JSON gerados pelo Claude. Podes separar vários JSONs por uma linha em branco ou envolver tudo num array. Aceita: incidentes, glicemias, equipamento, episodiosHospitalares, historico, consultas, medicacaoTemporaria.</p>
     <div id="msg-imp"></div>
     <div id="preview-imp"></div>
     <textarea id="ji" style="width:100%;min-height:200px;padding:10px;border:1px solid var(--b2);border-radius:var(--rs);background:var(--bg3);color:var(--t);font-family:'DM Mono',monospace;font-size:11px;resize:vertical" placeholder='Cole aqui o JSON do Claude...'></textarea>
@@ -798,7 +1010,6 @@ function rImport(){
     "sickDay":true,"glucoseAtEvent":310,"ketones":"negativo","location":"hospital",
     "trigger":"doença","symptoms":"...","action":"...","medicationNote":"basal +30%"}],
   "glicemias": [{"datetime":"2026-03-20T14:00:00","value_mgdl":310,"context":"sick-day","source":"picada"}],
-  "equipamento": [{"date":"2026-03-20","equipment_type":"sensor","event_type":"troca","equipment_model":"Guardian 4","notes":"..."}],
   "episodiosHospitalares": [{"date_in":"2026-03-20","date_out":"2026-03-21",
     "hospital":"Hospital La Paz","service":"ORL","episode_type":"urgente",
     "diagnosis":"Flemão periamigdalino esquerdo","glucose_at_admission":373,"hba1c_at_admission":7.5}],
@@ -820,6 +1031,7 @@ function previewImport(){
   document.getElementById('btn-confirm-import').style.display='none';
   if(!raw){msgEl.innerHTML='<div class="msg msg-err">Cola o JSON primeiro.</div>';return;}
 
+  // Tenta separar múltiplos JSONs por linha em branco
   const blocks=raw.split(/\n\s*\n/).map(b=>b.trim()).filter(b=>b.startsWith('{')&&b.endsWith('}'));
   const jsons=blocks.length>1?blocks:[raw];
 
@@ -831,6 +1043,7 @@ function previewImport(){
     try{
       const p=JSON.parse(j);
       parsed.push(p);
+      // conta por tipo
       if(Array.isArray(p)){p.forEach(item=>{if(item.date&&item.type)counts.incidentes++;});}
       else{
         if(p.incidentes)counts.incidentes+=p.incidentes.length;
@@ -838,14 +1051,13 @@ function previewImport(){
         if(p.glicemias)counts.glicemias+=p.glicemias.length;
         if(p.glucose)counts.glicemias+=p.glucose.length;
         if(p.equipamento)counts.equipamento+=p.equipamento.length;
-        if(p.equipment_log)counts.equipamento+=p.equipment_log.length;
         if(p.episodiosHospitalares)counts.episodios+=p.episodiosHospitalares.length;
         if(p.hospital_episodes)counts.episodios+=p.hospital_episodes.length;
         if(p.historico)counts.historico+=p.historico.length;
         if(p.medical_history)counts.historico+=p.medical_history.length;
         if(p.consultas)counts.consultas+=p.consultas.length;
         if(p.medicacaoTemporaria)counts.medTemp+=p.medicacaoTemporaria.length;
-        if(p.date&&p.type){counts.incidentes++;}
+        if(p.date&&p.type){counts.incidentes++;} // objeto único incidente
       }
     }catch(e){erros.push('Bloco inválido: '+e.message);}
   }
@@ -871,7 +1083,7 @@ async function confirmImport(){
   let saved=0,erros=[];
 
   for(const p of pendingImport){
-    // Incidentes
+    // Incidentes — objeto único ou array direto
     let il=[];
     if(Array.isArray(p))il=p.filter(x=>x.date&&x.type);
     else if(p.date&&p.type)il=[p];
@@ -890,21 +1102,6 @@ async function confirmImport(){
       if(!g.datetime&&!g.value_mgdl)continue;
       try{const dt=g.datetime?new Date(g.datetime).toISOString():new Date().toISOString();await sbUp('glucose_readings',{id:g.id||uid('glu'),datetime:dt,value_mgdl:parseInt(g.value_mgdl),context:g.context||null,source:g.source||null,sensor_model:g.sensor_model||null,notes:g.notes||null,incident_id:g.incident_id||null});saved++;}
       catch(e){erros.push('Glu: '+e.message);}
-    }
-
-    // ── BUG #1 FIX: Equipamento ──────────────────────────────────────────────
-    for(const e of(p.equipamento||p.equipment_log||[])){
-      if(!e.date)continue;
-      try{await sbUp('equipment_log',{
-        id:e.id||uid('eqp'),
-        date:e.date,
-        time:e.time||null,
-        equipment_type:EQP_TYPES.includes(e.equipment_type)?e.equipment_type:'outro',
-        equipment_model:e.equipment_model||null,
-        event_type:EQP_EVTS.includes(e.event_type)?e.event_type:'outro',
-        notes:e.notes||null
-      });saved++;}
-      catch(e2){erros.push('Eqp: '+e2.message);}
     }
 
     // Episódios hospitalares
@@ -950,7 +1147,8 @@ async function confirmImport(){
 // ─── EXPORTAR ─────────────────────────────────────────────────────────────────
 function rExport(){
   const el=document.getElementById('tab-exportar');
-  el.innerHTML=`<p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.7">Exporta todos os dados em JSON. O ficheiro pode ser reimportado na totalidade sem duplicações.</p>
+  el.innerHTML=`
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.7">Exporta todos os dados em JSON. O ficheiro pode ser reimportado na totalidade sem duplicações.</p>
     <div class="brow">
       <button class="btn btn-p" onclick="doExport()">⬇ Descarregar backup completo</button>
       <button class="btn btn-b" onclick="doExportInc()">⬇ Só incidentes CSV</button>
@@ -977,37 +1175,7 @@ async function doDel(table,id){
   catch(e){flash('Erro: '+e.message,'err');}
 }
 
-// ─── THEME AND FONT SIZE ──────────────────────────────────────────────────────
-const FONT_SIZES=[12,13,14,15,16,18];
-let currentFontIdx=2;
-
-function applyFontSize(idx){
-  currentFontIdx=Math.max(0,Math.min(FONT_SIZES.length-1,idx));
-  // BUG #2 FIX: usar '--fs' (dois hífens) em vez de '–fs' (en dash)
-  document.documentElement.style.setProperty('--fs',FONT_SIZES[currentFontIdx]+'px');
-  localStorage.setItem('caderno_fontsize',currentFontIdx);
-}
-
-function changeFontSize(dir){
-  if(dir===0)applyFontSize(2);
-  else applyFontSize(currentFontIdx+dir);
-}
-
-function toggleTheme(){
-  const isLight=document.body.classList.toggle('light');
-  document.getElementById('theme-btn').textContent=isLight?'☀️':'🌙';
-  localStorage.setItem('caderno_theme',isLight?'light':'dark');
-}
-
-function initPrefs(){
-  const t=localStorage.getItem('caderno_theme');
-  if(t==='light'){document.body.classList.add('light');document.getElementById('theme-btn').textContent='☀️';}
-  const f=localStorage.getItem('caderno_fontsize');
-  if(f!==null)applyFontSize(parseInt(f));
-}
-
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-initPrefs();
 loadAll();
 </script>
 </body>
