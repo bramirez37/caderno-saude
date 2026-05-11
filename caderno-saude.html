@@ -809,31 +809,32 @@ async function savePerfil(){
 
 // ─── DIGITALIZAR ──────────────────────────────────────────────────────────────
 let pendingExtraction=null;
+let _dgPages=[]; // array of {dataUrl, base64, name, size}
 
 function rDigitalizar(){
   const el=document.getElementById('tab-digitalizar');
   const apiKey=localStorage.getItem('caderno_anthropic_key')||'';
   el.innerHTML=`
-    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.7">Tira uma foto a um documento médico em papel — receita, informe clínico, resultado de análise. A IA lê o documento, extrai o que é relevante e propõe o que guardar. Tu confirmas antes de qualquer coisa ser gravada.</p>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.7">Fotografa as páginas de um documento médico — receita, informe clínico, resultado de análise. Podes seleccionar várias imagens ao mesmo tempo. A IA analisa o documento completo e propõe o que guardar. Tu confirmas antes de qualquer coisa ser gravada.</p>
     <div class="card s" style="margin-bottom:14px">
       <div style="font-size:13px;font-weight:500;margin-bottom:8px">Chave API Anthropic</div>
       <div style="display:flex;gap:8px">
-        <input type="password" id="dg-key" placeholder="sk-ant-..." style="flex:1;padding:8px 10px;border:1px solid var(--b2);border-radius:var(--rs);font-size:13px;background:var(--bg3);color:var(--t);font-family:'DM Mono',monospace" value="${esc(apiKey)}">
+        <input type="password" id="dg-key" placeholder="sk-ant-..." style="flex:1;padding:9px 12px;border:1px solid var(--b2);border-radius:var(--rs);font-size:13px;background:var(--bg3);color:var(--t);font-family:'DM Mono',monospace" value="${esc(apiKey)}">
         <button class="btn" onclick="saveApiKey()">Guardar</button>
       </div>
-      <div style="font-size:11px;color:var(--t3);margin-top:5px">Guardada só neste browser. Não vai a nenhum servidor nosso.</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:6px">Guardada só neste browser. Nunca vai a nenhum servidor nosso.</div>
     </div>
     ${!apiKey?`<div class="banner banner-warn">⚠ Configura a chave API acima antes de digitalizar.</div>`:''}
-    <div class="lbl">documento</div>
+    <div class="lbl">páginas do documento</div>
     <div id="dg-drop" style="border:2px dashed var(--b2);border-radius:var(--radius);padding:36px 16px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:14px"
          onclick="document.getElementById('dg-file').click()"
          ondragover="event.preventDefault();this.style.borderColor='var(--gb)'"
          ondragleave="this.style.borderColor='var(--b2)'"
          ondrop="event.preventDefault();this.style.borderColor='var(--b2)';dgHandleDrop(event)">
       <div style="font-size:36px;margin-bottom:8px">📄</div>
-      <div style="font-size:13px;color:var(--t2)">Clica ou arrasta uma foto aqui</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:4px">JPG · PNG · HEIC</div>
-      <input type="file" id="dg-file" accept="image/*" style="display:none" onchange="dgHandleFile(event)">
+      <div style="font-size:13px;color:var(--t2)">Clica ou arrasta as fotos aqui</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">JPG · PNG · HEIC · várias páginas ao mesmo tempo</div>
+      <input type="file" id="dg-file" accept="image/*" multiple style="display:none" onchange="dgHandleFiles(event)">
     </div>
     <div id="dg-preview"></div>
     <div id="dg-result"></div>`;
@@ -847,13 +848,23 @@ function saveApiKey(){
   rDigitalizar();
 }
 
-function dgHandleDrop(e){const f=e.dataTransfer.files[0];if(f)dgProcess(f);}
-function dgHandleFile(e){const f=e.target.files[0];if(f)dgProcess(f);}
+function dgHandleDrop(e){dgProcessFiles([...e.dataTransfer.files]);}
+function dgHandleFiles(e){dgProcessFiles([...e.target.files]);}
+
+function dgApiError(status,msg){
+  if(status===401)return'Chave API inválida ou expirada. Verifica em console.anthropic.com.';
+  if(status===403)return'Chave API sem permissões. Verifica os limites da tua conta.';
+  if(status===429)return'Demasiados pedidos. Aguarda um momento e tenta de novo.';
+  if(status===500||status===529)return'Erro nos servidores Anthropic. Tenta de novo em breve.';
+  if(msg&&msg.length<200)return msg;
+  return`Erro API (${status}). Verifica a tua chave e saldo em console.anthropic.com.`;
+}
 
 async function dgCompress(file){
-  return new Promise(resolve=>{
+  return new Promise((resolve,reject)=>{
     const img=new Image();
     const url=URL.createObjectURL(file);
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Imagem inválida: '+file.name));};
     img.onload=()=>{
       const MAX=1400;
       let w=img.width,h=img.height;
@@ -862,62 +873,86 @@ async function dgCompress(file){
       c.getContext('2d').drawImage(img,0,0,w,h);
       const dataUrl=c.toDataURL('image/jpeg',0.82);
       URL.revokeObjectURL(url);
-      resolve({dataUrl,base64:dataUrl.split(',')[1],size:Math.round(dataUrl.length*0.75)});
+      resolve({dataUrl,base64:dataUrl.split(',')[1],name:file.name,size:Math.round(dataUrl.length*0.75)});
     };
     img.src=url;
   });
 }
 
-async function dgProcess(file){
-  if(file.size>15*1024*1024){flash('Ficheiro demasiado grande (máx 15MB).','err');return;}
+async function dgProcessFiles(files){
+  if(!files||files.length===0)return;
+  const tooBig=files.filter(f=>f.size>15*1024*1024);
+  if(tooBig.length){flash(`${tooBig.map(f=>f.name).join(', ')} — demasiado grande (máx 15MB por ficheiro).`,'err');return;}
   const pre=document.getElementById('dg-preview');
-  pre.innerHTML=`<div class="card s" style="margin-bottom:14px;text-align:center;padding:20px;color:var(--t2)">A processar imagem…</div>`;
-  const comp=await dgCompress(file);
-  window._dgB64=comp.base64;
+  pre.innerHTML=`<div class="card s" style="text-align:center;padding:20px;color:var(--t2)">A processar ${files.length} imagem(ns)…</div>`;
+  document.getElementById('dg-result').innerHTML='';
+  try{
+    const compressed=await Promise.all(files.map(dgCompress));
+    _dgPages=compressed;
+    dgRenderPages();
+  }catch(e){
+    pre.innerHTML=`<div class="msg msg-err">Erro ao processar imagem: ${esc(e.message)}</div>`;
+  }
+}
+
+function dgRenderPages(){
+  const pre=document.getElementById('dg-preview');
+  if(!_dgPages.length){pre.innerHTML='';return;}
+  const thumbs=_dgPages.map((p,i)=>`
+    <div style="position:relative;display:inline-block;margin:4px">
+      <img src="${p.dataUrl}" style="width:110px;height:150px;object-fit:cover;border-radius:var(--rs);border:1px solid var(--b);display:block">
+      <div style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace">p.${i+1}</div>
+      <button onclick="dgRemovePage(${i})" style="position:absolute;top:4px;right:4px;background:var(--rd);color:var(--r);border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1">×</button>
+      <div style="font-size:10px;color:var(--t3);text-align:center;margin-top:3px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</div>
+    </div>`).join('');
+  const totalKB=_dgPages.reduce((s,p)=>s+p.size,0);
   pre.innerHTML=`<div class="card s" style="margin-bottom:14px">
-    <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
-      <img src="${comp.dataUrl}" style="max-width:180px;max-height:260px;border-radius:var(--rs);border:1px solid var(--b);flex-shrink:0" alt="doc">
-      <div style="flex:1;min-width:140px">
-        <div style="font-size:13px;font-weight:500;margin-bottom:5px">${esc(file.name)}</div>
-        <div style="font-size:11px;color:var(--t3);margin-bottom:12px">
-          Original: ${(file.size/1024).toFixed(0)}KB → Enviado: ${(comp.size/1024).toFixed(0)}KB
-        </div>
-        <div class="brow" style="margin-bottom:0">
-          <button class="btn btn-p" onclick="dgAnalyze()">🔍 Analisar com IA</button>
-          <button class="btn" onclick="document.getElementById('dg-preview').innerHTML='';document.getElementById('dg-result').innerHTML='';window._dgB64=null">Limpar</button>
-        </div>
-      </div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:10px">${_dgPages.length} página(s) · ${(totalKB/1024).toFixed(0)}KB total</div>
+    <div style="margin-bottom:14px;line-height:0">${thumbs}</div>
+    <div class="brow" style="margin-bottom:0">
+      <button class="btn btn-p" onclick="dgAnalyze()">🔍 Analisar documento completo</button>
+      <button class="btn" onclick="document.getElementById('dg-file').click()">+ Adicionar páginas</button>
+      <button class="btn" onclick="_dgPages=[];dgRenderPages();document.getElementById('dg-result').innerHTML=''">Limpar tudo</button>
     </div>
   </div>`;
-  document.getElementById('dg-result').innerHTML='';
+}
+
+function dgRemovePage(i){
+  _dgPages.splice(i,1);
+  dgRenderPages();
 }
 
 async function dgAnalyze(){
   const apiKey=localStorage.getItem('caderno_anthropic_key');
   if(!apiKey){flash('Configura a chave API primeiro.','err');return;}
-  if(!window._dgB64){flash('Carrega um documento primeiro.','err');return;}
+  if(!_dgPages.length){flash('Carrega pelo menos uma imagem.','err');return;}
   const resEl=document.getElementById('dg-result');
-  resEl.innerHTML=`<div class="card s"><div style="text-align:center;padding:24px;color:var(--t2)">🔍 A analisar… pode demorar alguns segundos.</div></div>`;
+  resEl.innerHTML=`<div class="card s"><div style="text-align:center;padding:28px;color:var(--t2)">
+    <div style="font-size:22px;margin-bottom:8px">🔍</div>
+    <div style="font-size:13px;font-weight:500">A analisar ${_dgPages.length} página(s)…</div>
+    <div style="font-size:12px;color:var(--t3);margin-top:4px">Pode demorar 10–30 segundos.</div>
+  </div></div>`;
+
   const sys=`És um assistente especializado em digitalização de documentos clínicos em português e espanhol do Hospital La Paz / Madrid.
 
-Analisa o documento e extrai apenas dados clinicamente relevantes. Sê conservador — só extrais o que está claramente visível.
+As imagens que recebes são páginas consecutivas do MESMO documento. Analisa-o na totalidade e extrai apenas dados clinicamente relevantes. Sê conservador — só extrais o que está claramente visível.
 
 REGRAS CRÍTICAS:
-- Requisições de exames (volantes) são pedidos ainda por fazer. NÃO têm resultados. Não as registas como se tivessem.
+- Requisições de exames (volantes) são pedidos ainda por realizar. NÃO têm resultados. Não as registas.
 - Datas em formato YYYY-MM-DD.
 - Nunca inventas valores.
 - Ignora: códigos de barras, números de processo, assinaturas, endereços, texto legal no rodapé.
 
-RESPONDE APENAS COM JSON VÁLIDO, sem markdown, sem texto extra antes ou depois:
+RESPONDE APENAS COM JSON VÁLIDO, sem markdown, sem texto extra:
 {
   "tipo_documento": "requisicao|analitica|consulta|alta_hospitalar|imagiologia|outro",
   "data_documento": "YYYY-MM-DD ou null",
   "medico": "nome ou null",
   "hospital": "nome ou null",
   "especialidade": "nome ou null",
-  "resumo": "1-2 frases descrevendo o documento e o que contém",
+  "resumo": "2-3 frases descrevendo o documento completo e o que contém",
   "extrair": {
-    "consultas": [{"date":"YYYY-MM-DD","specialty":"...","doctor":"...","hospital":"...","notes":"resumo clínico relevante"}],
+    "consultas": [{"date":"YYYY-MM-DD","specialty":"...","doctor":"...","hospital":"...","notes":"resumo clínico completo"}],
     "historico": [{"date":"YYYY-MM-DD","diagnosis":"...","status":"ativo|crónico|em-seguimento|resolvido","source":"SNS|privado|auto|outro","specialty":"...","notes":"..."}],
     "medicacaoTemporaria": [{"name":"...","dose":"...","frequency":"...","start_date":"YYYY-MM-DD","duration_days":N,"reason":"...","notes":"..."}],
     "medicacaoCronica": [{"name":"...","dose":"...","frequency":"...","device":"...","notes":"..."}],
@@ -925,10 +960,16 @@ RESPONDE APENAS COM JSON VÁLIDO, sem markdown, sem texto extra antes ou depois:
   },
   "notas_adicionais": "observações importantes não capturadas acima, ou null"
 }
+Omite secções com arrays vazios.`;
 
-Omite secções com arrays vazios. Para requisições, o resumo deve dizer que são pedidos ainda por realizar.`;
+  const imgBlocks=_dgPages.map(p=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:p.base64}}));
+
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),90000);
+
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{
+      signal:controller.signal,
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
@@ -936,20 +977,29 @@ Omite secções com arrays vazios. Para requisições, o resumo deve dizer que s
         max_tokens:2000,
         system:sys,
         messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:window._dgB64}},
-          {type:'text',text:'Analisa este documento médico e devolve o JSON.'}
+          ...imgBlocks,
+          {type:'text',text:`Documento com ${_dgPages.length} página(s). Analisa na totalidade e devolve o JSON.`}
         ]}]
       })
     });
-    if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'Erro API '+r.status);}
+    clearTimeout(timeout);
+    if(!r.ok){
+      let errMsg='';
+      try{const e=await r.json();errMsg=e.error?.message||'';}catch{}
+      throw new Error(dgApiError(r.status,errMsg));
+    }
     const data=await r.json();
     const txt=data.content[0].text.trim();
     let ex;
     try{ex=JSON.parse(txt);}
-    catch{const m=txt.match(/\{[\s\S]*\}/);if(m)ex=JSON.parse(m[0]);else throw new Error('Resposta não é JSON válido');}
+    catch{const m=txt.match(/\{[\s\S]*\}/);if(m)ex=JSON.parse(m[0]);else throw new Error('A IA não devolveu JSON válido. Tenta de novo.');}
     pendingExtraction=ex;
     dgRenderResult(ex);
-  }catch(e){resEl.innerHTML=`<div class="msg msg-err">Erro: ${esc(e.message)}</div>`;}
+  }catch(e){
+    clearTimeout(timeout);
+    const msg=e.name==='AbortError'?'Tempo limite excedido (90s). O documento pode ser demasiado complexo — tenta com menos páginas.':e.message;
+    resEl.innerHTML=`<div class="msg msg-err">❌ ${esc(msg)}</div>`;
+  }
 }
 
 function dgRenderResult(ex){
