@@ -6,6 +6,7 @@
 <title>Caderno de Saúde · Bernardo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 <style>
 /* ── DARK THEME (default) ───────────────────────────────────────────── */
 :root{
@@ -861,10 +862,20 @@ function dgApiError(status,msg){
 }
 
 async function dgCompress(file){
+  // Converter HEIC/HEIF para JPEG se necessário
+  let processFile=file;
+  const isHeic=/\.(heic|heif)$/i.test(file.name)||file.type==='image/heic'||file.type==='image/heif';
+  if(isHeic){
+    if(typeof heic2any==='undefined')throw new Error('Biblioteca de conversão HEIC não carregou. Refresca a página.');
+    try{
+      const blob=await heic2any({blob:file,toType:'image/jpeg',quality:0.85});
+      processFile=new File([blob],file.name.replace(/\.(heic|heif)$/i,'.jpg'),{type:'image/jpeg'});
+    }catch(e){throw new Error('Não foi possível converter o ficheiro HEIC: '+e.message);}
+  }
   return new Promise((resolve,reject)=>{
     const img=new Image();
-    const url=URL.createObjectURL(file);
-    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Imagem inválida: '+file.name));};
+    const url=URL.createObjectURL(processFile);
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Imagem inválida ou formato não suportado: '+file.name));};
     img.onload=()=>{
       const MAX=1400;
       let w=img.width,h=img.height;
@@ -884,7 +895,7 @@ async function dgProcessFiles(files){
   const tooBig=files.filter(f=>f.size>15*1024*1024);
   if(tooBig.length){flash(`${tooBig.map(f=>f.name).join(', ')} — demasiado grande (máx 15MB por ficheiro).`,'err');return;}
   const pre=document.getElementById('dg-preview');
-  pre.innerHTML=`<div class="card s" style="text-align:center;padding:20px;color:var(--t2)">A processar ${files.length} imagem(ns)…</div>`;
+  pre.innerHTML=`<div class="card s" style="text-align:center;padding:20px;color:var(--t2)">A processar ${files.length} imagem(ns)${files.some(f=>/\.(heic|heif)$/i.test(f.name))?'<br><span style="font-size:11px;color:var(--t3)">Ficheiros HEIC estão a ser convertidos…</span>':''}…</div>`;
   document.getElementById('dg-result').innerHTML='';
   try{
     const compressed=await Promise.all(files.map(dgCompress));
