@@ -598,9 +598,13 @@ function rEp(){
         <span class="badge ${e.episode_type==='urgente'?'br':e.episode_type==='cirurgia'?'bp':'bz'}">${e.episode_type||'outro'}</span>
         ${dur?`<span class="badge bz">${dur}</span>`:''}
       </div><span class="cd">${fmtD(e.date_in)}${e.date_out&&e.date_out!==e.date_in?' → '+fmtD(e.date_out):''}</span></div>
-        ${e.diagnosis?`<div style="font-size:14px;font-weight:500;margin-bottom:4px">${esc(e.diagnosis)}</div>`:''}
-        ${e.reason_in?`<div class="cb">Motivo: ${esc(e.reason_in)}</div>`:''}
-        ${e.doctor?`<div style="font-size:12px;color:var(--t3);margin-top:4px">${esc(e.doctor)}</div>`:''}
+        ${e.diagnosis?`<div style="font-size:14px;font-weight:500;margin-bottom:6px">${esc(e.diagnosis)}</div>`:''}
+        ${e.reason_in?`<div class="dr"><div class="dk">Motivo</div><div class="dv">${esc(e.reason_in)}</div></div>`:''}
+        ${e.procedures?`<div class="dr"><div class="dk">Procedimentos</div><div class="dv">${esc(e.procedures)}</div></div>`:''}
+        ${e.evolution?`<div class="dr"><div class="dk">Evolução</div><div class="dv">${esc(e.evolution)}</div></div>`:''}
+        ${e.discharge_notes?`<div class="dr"><div class="dk">Alta / tratamento</div><div class="dv">${esc(e.discharge_notes)}</div></div>`:''}
+        ${e.notes?`<div class="dr"><div class="dk">Notas</div><div class="dv">${esc(e.notes)}</div></div>`:''}
+        ${e.doctor?`<div style="font-size:12px;color:var(--t3);margin-top:6px">${esc(e.doctor)}</div>`:''}
         ${e.glucose_at_admission?`<div class="badge ${gb(e.glucose_at_admission)}" style="display:inline-block;margin-top:6px">${e.glucose_at_admission} mg/dL entrada</div>`:''}
         <div class="cf"><button class="btn btn-d" onclick="doDel('hospital_episodes','${e.id}')">apagar</button></div>
       </div>`;
@@ -960,6 +964,15 @@ REGRAS CRÍTICAS:
 - Nunca inventas valores.
 - Ignora: códigos de barras, números de processo, assinaturas, endereços, texto legal no rodapé.
 
+REGRAS PARA O HISTORIAL — MUITO IMPORTANTE:
+- NÃO extraias "enfermedades previas", "antecedentes", "enfermedades familiares hereditarias" — são contexto clínico do paciente, não diagnósticos novos.
+- SÓ extraias para historial: diagnósticos principais do documento actual, conclusões de imagiologia, resultados de biópsias, diagnósticos de alta, condições identificadas pela primeira vez neste episódio.
+- Se o documento lista DM1, nódulo tiróide, obesidade, etc. como antecedentes — IGNORA. Já estão no historial.
+
+REGRAS PARA EPISÓDIOS HOSPITALARES:
+- Inclui sempre: motivo de ingresso, diagnóstico principal, procedimentos realizados, evolução clínica, instruções de alta.
+- Distingue urgência de internamento — se há data de alta diferente da entrada é internamento.
+
 RESPONDE APENAS COM JSON VÁLIDO, sem markdown, sem texto extra:
 {
   "tipo_documento": "requisicao|analitica|consulta|alta_hospitalar|imagiologia|outro",
@@ -970,10 +983,10 @@ RESPONDE APENAS COM JSON VÁLIDO, sem markdown, sem texto extra:
   "resumo": "2-3 frases descrevendo o documento completo e o que contém",
   "extrair": {
     "consultas": [{"date":"YYYY-MM-DD","specialty":"...","doctor":"...","hospital":"...","notes":"resumo clínico completo"}],
-    "historico": [{"date":"YYYY-MM-DD","diagnosis":"...","status":"ativo|crónico|em-seguimento|resolvido","source":"SNS|privado|auto|outro","specialty":"...","notes":"..."}],
+    "historico": [{"date":"YYYY-MM-DD","diagnosis":"diagnóstico NOVO identificado neste documento","status":"ativo|crónico|em-seguimento|resolvido","source":"SNS|privado|auto|outro","specialty":"...","notes":"..."}],
     "medicacaoTemporaria": [{"name":"...","dose":"...","frequency":"...","start_date":"YYYY-MM-DD","duration_days":N,"reason":"...","notes":"..."}],
     "medicacaoCronica": [{"name":"...","dose":"...","frequency":"...","device":"...","notes":"..."}],
-    "episodiosHospitalares": [{"date_in":"YYYY-MM-DD","date_out":"YYYY-MM-DD ou null","hospital":"...","service":"...","doctor":"...","episode_type":"urgente|programado|consulta|cirurgia|outro","diagnosis":"...","notes":"..."}]
+    "episodiosHospitalares": [{"date_in":"YYYY-MM-DD","date_out":"YYYY-MM-DD ou null","hospital":"...","service":"...","doctor":"...","episode_type":"urgente|programado|consulta|cirurgia|outro","reason_in":"motivo de entrada","diagnosis":"diagnóstico principal","procedures":"procedimentos realizados","evolution":"evolução clínica","discharge_notes":"instruções de alta e tratamento","notes":"..."}]
   },
   "notas_adicionais": "observações importantes não capturadas acima, ou null"
 }
@@ -1110,6 +1123,10 @@ function dgRenderResult(ex){
         dgField(`ep-serv-${i}`,'serviço',e.service)+
         dgField(`ep-doc-${i}`,'médico',e.doctor)+
         dgField(`ep-type-${i}`,'tipo',e.episode_type,'select',['urgente','programado','consulta','cirurgia','outro'])+
+        dgField(`ep-reason-${i}`,'motivo de entrada',e.reason_in,'textarea')+
+        dgField(`ep-proc-${i}`,'procedimentos',e.procedures,'textarea')+
+        dgField(`ep-evol-${i}`,'evolução clínica',e.evolution,'textarea')+
+        dgField(`ep-disc-${i}`,'instruções de alta',e.discharge_notes,'textarea')+
         dgField(`ep-notes-${i}`,'notas',e.notes,'textarea'));
       total++;
     });
@@ -1178,7 +1195,7 @@ async function dgConfirm(nc,nh,nmt,nmb,nep){
     const hospital=dgVal(`ep-hosp-${i}`);
     const date_in=dgVal(`ep-in-${i}`);
     if(!hospital||!date_in)continue;
-    try{await sbUp('hospital_episodes',{id:uid('ep'),date_in,date_out:dgVal(`ep-out-${i}`)||null,hospital,service:dgVal(`ep-serv-${i}`)||null,doctor:dgVal(`ep-doc-${i}`)||null,episode_type:dgVal(`ep-type-${i}`)||'outro',diagnosis:dgVal(`ep-diag-${i}`)||null,notes:dgVal(`ep-notes-${i}`)||null});saved++;}
+    try{await sbUp('hospital_episodes',{id:uid('ep'),date_in,date_out:dgVal(`ep-out-${i}`)||null,hospital,service:dgVal(`ep-serv-${i}`)||null,doctor:dgVal(`ep-doc-${i}`)||null,episode_type:dgVal(`ep-type-${i}`)||'outro',reason_in:dgVal(`ep-reason-${i}`)||null,diagnosis:dgVal(`ep-diag-${i}`)||null,procedures:dgVal(`ep-proc-${i}`)||null,evolution:dgVal(`ep-evol-${i}`)||null,discharge_notes:dgVal(`ep-disc-${i}`)||null,notes:dgVal(`ep-notes-${i}`)||null});saved++;}
     catch(e){erros.push('Ep '+i+': '+e.message);}
   }
 
