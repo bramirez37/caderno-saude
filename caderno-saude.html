@@ -826,14 +826,18 @@ function rDigitalizar(){
     </div>
     ${!apiKey?`<div class="banner banner-warn">⚠ Configura a chave API acima antes de digitalizar.</div>`:''}
     <div class="lbl">páginas do documento</div>
-    <div id="dg-drop" style="border:2px dashed var(--b2);border-radius:var(--radius);padding:36px 16px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:14px"
-         onclick="document.getElementById('dg-file').click()"
+    <div id="dg-drop" style="border:2px dashed var(--b2);border-radius:var(--radius);padding:36px 16px;text-align:center;transition:border-color .2s;margin-bottom:14px"
          ondragover="event.preventDefault();this.style.borderColor='var(--gb)'"
          ondragleave="this.style.borderColor='var(--b2)'"
          ondrop="event.preventDefault();this.style.borderColor='var(--b2)';dgHandleDrop(event)">
-      <div style="font-size:36px;margin-bottom:8px">📄</div>
-      <div style="font-size:13px;color:var(--t2)">Clica ou arrasta as fotos aqui</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:4px">JPG · PNG · HEIC · várias páginas ao mesmo tempo</div>
+      <div style="font-size:36px;margin-bottom:10px">📄</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:14px">Arrasta as fotos aqui, ou usa os botões abaixo</div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="document.getElementById('dg-camera').click()">📷 Fotografar</button>
+        <button class="btn" onclick="document.getElementById('dg-file').click()">🖼 Galeria / ficheiros</button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-top:10px">JPG · PNG · câmara directa · várias páginas</div>
+      <input type="file" id="dg-camera" accept="image/*" capture="environment" style="display:none" onchange="dgHandleFiles(event)">
       <input type="file" id="dg-file" accept="image/*" multiple style="display:none" onchange="dgHandleFiles(event)">
     </div>
     <div id="dg-preview"></div>
@@ -849,7 +853,11 @@ function saveApiKey(){
 }
 
 function dgHandleDrop(e){dgProcessFiles([...e.dataTransfer.files]);}
-function dgHandleFiles(e){dgProcessFiles([...e.target.files]);}
+function dgHandleFiles(e){
+  const files=[...e.target.files];
+  e.target.value=''; // reset so same file can be added again
+  if(files.length)dgProcessFiles(files,true); // true = accumulate
+}
 
 function dgApiError(status,msg){
   if(status===401)return'Chave API inválida ou expirada. Verifica em console.anthropic.com.';
@@ -885,19 +893,21 @@ async function dgCompress(file){
   });
 }
 
-async function dgProcessFiles(files){
+async function dgProcessFiles(files,accumulate=false){
   if(!files||files.length===0)return;
   const tooBig=files.filter(f=>f.size>15*1024*1024);
-  if(tooBig.length){flash(`${tooBig.map(f=>f.name).join(', ')} — demasiado grande (máx 15MB por ficheiro).`,'err');return;}
+  if(tooBig.length){flash(`${tooBig.map(f=>f.name).join(', ')} — demasiado grande (máx 15MB).`,'err');return;}
+  const isHeicAny=files.some(f=>/\.(heic|heif)$/i.test(f.name));
   const pre=document.getElementById('dg-preview');
-  pre.innerHTML=`<div class="card s" style="text-align:center;padding:20px;color:var(--t2)">A processar ${files.length} imagem(ns)${files.some(f=>/\.(heic|heif)$/i.test(f.name))?'<br><span style="font-size:11px;color:var(--t3)">Ficheiros HEIC estão a ser convertidos…</span>':''}…</div>`;
-  document.getElementById('dg-result').innerHTML='';
+  pre.innerHTML=`<div class="card s" style="text-align:center;padding:20px;color:var(--t2)">A processar ${files.length} imagem(ns)${isHeicAny?'<br><span style="font-size:11px;color:var(--t3)">HEIC não suportado — usa JPG/PNG</span>':''}…</div>`;
+  if(!accumulate)document.getElementById('dg-result').innerHTML='';
   try{
     const compressed=await Promise.all(files.map(dgCompress));
-    _dgPages=compressed;
+    if(accumulate)_dgPages=[..._dgPages,...compressed];
+    else _dgPages=compressed;
     dgRenderPages();
   }catch(e){
-    pre.innerHTML=`<div class="msg msg-err">Erro ao processar imagem: ${esc(e.message)}</div>`;
+    pre.innerHTML=`<div class="msg msg-err">${esc(e.message)}</div>`;
   }
 }
 
@@ -917,7 +927,8 @@ function dgRenderPages(){
     <div style="margin-bottom:14px;line-height:0">${thumbs}</div>
     <div class="brow" style="margin-bottom:0">
       <button class="btn btn-p" onclick="dgAnalyze()">🔍 Analisar documento completo</button>
-      <button class="btn" onclick="document.getElementById('dg-file').click()">+ Adicionar páginas</button>
+      <button class="btn" onclick="document.getElementById('dg-camera').click()">📷 + Página</button>
+      <button class="btn" onclick="document.getElementById('dg-file').click()">🖼 + Galeria</button>
       <button class="btn" onclick="_dgPages=[];dgRenderPages();document.getElementById('dg-result').innerHTML=''">Limpar tudo</button>
     </div>
   </div>`;
@@ -1008,45 +1019,103 @@ Omite secções com arrays vazios.`;
   }
 }
 
+function dgField(id,label,val,type='text',opts=null){
+  const v=val||'';
+  if(type==='textarea')return`<div class="dr"><div class="dk">${label}</div><div class="dv"><textarea id="${id}" style="width:100%;padding:5px 8px;border:1px solid var(--b2);border-radius:var(--rs);font-size:12.5px;background:var(--bg);color:var(--t);font-family:'DM Sans',sans-serif;resize:vertical;min-height:52px">${esc(v)}</textarea></div></div>`;
+  if(type==='select'&&opts)return`<div class="dr"><div class="dk">${label}</div><div class="dv"><select id="${id}" style="padding:5px 8px;border:1px solid var(--b2);border-radius:var(--rs);font-size:12.5px;background:var(--bg);color:var(--t);font-family:'DM Sans',sans-serif">${opts.map(o=>`<option value="${o}" ${o===v?'selected':''}>${o}</option>`).join('')}</select></div></div>`;
+  return`<div class="dr"><div class="dk">${label}</div><div class="dv"><input type="${type}" id="${id}" value="${esc(v)}" style="width:100%;padding:5px 8px;border:1px solid var(--b2);border-radius:var(--rs);font-size:12.5px;background:var(--bg);color:var(--t);font-family:'DM Sans',sans-serif"></div></div>`;
+}
+
+function dgItemWrap(id,title,fields){
+  return`<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">
+    <div style="padding-top:14px;flex-shrink:0">
+      <input type="checkbox" id="chk-${id}" checked style="width:17px;height:17px;accent-color:var(--g);cursor:pointer">
+    </div>
+    <div class="card s" style="flex:1;margin-bottom:0">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:8px;font-weight:500">${title}</div>
+      ${fields}
+    </div>
+  </div>`;
+}
+
+function dgVal(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+function dgChk(id){const el=document.getElementById(`chk-${id}`);return el?el.checked:false;}
+
 function dgRenderResult(ex){
   const resEl=document.getElementById('dg-result');
   const {tipo_documento,data_documento,medico,hospital,resumo,extrair,notas_adicionais}=ex;
   const tipoBadge={requisicao:'ba',analitica:'bg',consulta:'bb',alta_hospitalar:'br',imagiologia:'bp',outro:'bz'};
-  let secs='';
   const ext=extrair||{};
+  let secs='';
+  let total=0;
 
   if(ext.consultas?.length){
     secs+=`<div class="lbl">consultas (${ext.consultas.length})</div>`;
-    ext.consultas.forEach(c=>{secs+=`<div class="card s" style="margin-bottom:6px">
-      ${[['Data',c.date||'—'],['Especialidade',c.specialty||'—'],['Médico',c.doctor||'—'],['Hospital',c.hospital||'—'],['Notas',c.notes||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
-    </div>`;});
+    ext.consultas.forEach((c,i)=>{
+      secs+=dgItemWrap(`c-${i}`,'consulta',
+        dgField(`c-date-${i}`,'data',c.date,'date')+
+        dgField(`c-spec-${i}`,'especialidade',c.specialty)+
+        dgField(`c-doc-${i}`,'médico',c.doctor)+
+        dgField(`c-hosp-${i}`,'hospital',c.hospital)+
+        dgField(`c-notes-${i}`,'notas',c.notes,'textarea'));
+      total++;
+    });
   }
   if(ext.historico?.length){
     secs+=`<div class="lbl">historial / diagnósticos (${ext.historico.length})</div>`;
-    ext.historico.forEach(h=>{secs+=`<div class="card s" style="margin-bottom:6px">
-      ${[['Diagnóstico',h.diagnosis||'—'],['Data',h.date||'—'],['Status',h.status||'ativo'],['Especialidade',h.specialty||''],['Notas',h.notes||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
-    </div>`;});
+    ext.historico.forEach((h,i)=>{
+      secs+=dgItemWrap(`h-${i}`,'diagnóstico',
+        dgField(`h-diag-${i}`,'diagnóstico',h.diagnosis)+
+        dgField(`h-date-${i}`,'data',h.date,'date')+
+        dgField(`h-stat-${i}`,'status',h.status,'select',['ativo','crónico','em-seguimento','resolvido'])+
+        dgField(`h-spec-${i}`,'especialidade',h.specialty)+
+        dgField(`h-notes-${i}`,'notas',h.notes,'textarea'));
+      total++;
+    });
   }
   if(ext.medicacaoTemporaria?.length){
     secs+=`<div class="lbl">medicação temporária (${ext.medicacaoTemporaria.length})</div>`;
-    ext.medicacaoTemporaria.forEach(m=>{secs+=`<div class="card s" style="margin-bottom:6px">
-      ${[['Nome',m.name||'—'],['Dose/freq.',[m.dose,m.frequency].filter(Boolean).join(' · ')||'—'],['Início',m.start_date||'—'],['Duração',m.duration_days?m.duration_days+' dias':''],['Razão',m.reason||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
-    </div>`;});
+    ext.medicacaoTemporaria.forEach((m,i)=>{
+      secs+=dgItemWrap(`mt-${i}`,'medicação temporária',
+        dgField(`mt-name-${i}`,'nome',m.name)+
+        dgField(`mt-dose-${i}`,'dose',m.dose)+
+        dgField(`mt-freq-${i}`,'frequência',m.frequency)+
+        dgField(`mt-start-${i}`,'início',m.start_date,'date')+
+        dgField(`mt-dur-${i}`,'duração (dias)',m.duration_days?String(m.duration_days):'')+
+        dgField(`mt-reason-${i}`,'razão',m.reason)+
+        dgField(`mt-notes-${i}`,'notas',m.notes,'textarea'));
+      total++;
+    });
   }
   if(ext.medicacaoCronica?.length){
     secs+=`<div class="lbl">medicação crónica (${ext.medicacaoCronica.length})</div>`;
-    ext.medicacaoCronica.forEach(m=>{secs+=`<div class="card s" style="margin-bottom:6px">
-      ${[['Nome',m.name||'—'],['Dose/freq.',[m.dose,m.frequency].filter(Boolean).join(' · ')||'—'],['Dispositivo',m.device||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
-    </div>`;});
+    ext.medicacaoCronica.forEach((m,i)=>{
+      secs+=dgItemWrap(`mb-${i}`,'medicação crónica',
+        dgField(`mb-name-${i}`,'nome',m.name)+
+        dgField(`mb-dose-${i}`,'dose',m.dose)+
+        dgField(`mb-freq-${i}`,'frequência',m.frequency)+
+        dgField(`mb-dev-${i}`,'dispositivo',m.device)+
+        dgField(`mb-notes-${i}`,'notas',m.notes,'textarea'));
+      total++;
+    });
   }
   if(ext.episodiosHospitalares?.length){
     secs+=`<div class="lbl">episódios hospitalares (${ext.episodiosHospitalares.length})</div>`;
-    ext.episodiosHospitalares.forEach(e=>{secs+=`<div class="card s" style="margin-bottom:6px">
-      ${[['Hospital',e.hospital||'—'],['Diagnóstico',e.diagnosis||'—'],['Entrada',e.date_in||'—'],['Alta',e.date_out||''],['Serviço',e.service||''],['Médico',e.doctor||'']].filter(([,v])=>v).map(([k,v])=>`<div class="dr"><div class="dk">${k}</div><div class="dv">${esc(v)}</div></div>`).join('')}
-    </div>`;});
+    ext.episodiosHospitalares.forEach((e,i)=>{
+      secs+=dgItemWrap(`ep-${i}`,'episódio hospitalar',
+        dgField(`ep-hosp-${i}`,'hospital',e.hospital)+
+        dgField(`ep-diag-${i}`,'diagnóstico',e.diagnosis)+
+        dgField(`ep-in-${i}`,'entrada',e.date_in,'date')+
+        dgField(`ep-out-${i}`,'alta',e.date_out,'date')+
+        dgField(`ep-serv-${i}`,'serviço',e.service)+
+        dgField(`ep-doc-${i}`,'médico',e.doctor)+
+        dgField(`ep-type-${i}`,'tipo',e.episode_type,'select',['urgente','programado','consulta','cirurgia','outro'])+
+        dgField(`ep-notes-${i}`,'notas',e.notes,'textarea'));
+      total++;
+    });
   }
 
-  const hasData=Object.values(ext).some(v=>v?.length>0);
+  const hasData=total>0;
   resEl.innerHTML=`
     <div class="card s" style="margin-bottom:14px">
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
@@ -1058,54 +1127,67 @@ function dgRenderResult(ex){
       ${resumo?`<div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:${notas_adicionais?'10px':'0'}">${esc(resumo)}</div>`:''}
       ${notas_adicionais?`<div class="banner banner-warn" style="margin-bottom:0">📌 ${esc(notas_adicionais)}</div>`:''}
     </div>
-    ${hasData?secs:'<div class="msg msg-warn">Nenhum dado clínico para extrair deste documento. Ver resumo acima.</div>'}
-    ${hasData?`<div class="brow">
-      <button class="btn btn-p" onclick="dgConfirm()">✓ Guardar estes dados</button>
-      <button class="btn" onclick="pendingExtraction=null;document.getElementById('dg-result').innerHTML=''">Descartar</button>
-    </div>`:''}
-    <div class="lbl" style="margin-top:14px">json extraído (referência)</div>
-    <div class="mono" style="font-size:10px">${esc(JSON.stringify(ex,null,2))}</div>`;
+    ${hasData
+      ?`<div style="font-size:12px;color:var(--t3);margin-bottom:14px">✏️ Edita os campos que precisar. Desmarca o checkbox dos itens que não queres guardar.</div>
+        ${secs}
+        <div class="brow" style="margin-top:16px">
+          <button class="btn btn-p" onclick="dgConfirm(${ext.consultas?.length||0},${ext.historico?.length||0},${ext.medicacaoTemporaria?.length||0},${ext.medicacaoCronica?.length||0},${ext.episodiosHospitalares?.length||0})">✓ Guardar seleccionados</button>
+          <button class="btn" onclick="pendingExtraction=null;document.getElementById('dg-result').innerHTML=''">Descartar tudo</button>
+        </div>`
+      :'<div class="msg msg-warn">Nenhum dado clínico para extrair deste documento. Ver resumo acima.</div>'
+    }`;
 }
 
-async function dgConfirm(){
-  if(!pendingExtraction)return;
-  const ext=pendingExtraction.extrair||{};
+async function dgConfirm(nc,nh,nmt,nmb,nep){
   let saved=0,erros=[];
 
-  for(const a of(ext.consultas||[])){
-    if(!a.date)continue;
-    try{await sbUp('medical_appointments',{id:uid('apt'),date:a.date,specialty:a.specialty||'outro',doctor:a.doctor||null,hospital:a.hospital||null,notes:a.notes||null});saved++;}
-    catch(e){erros.push('Consulta: '+e.message);}
+  for(let i=0;i<nc;i++){
+    if(!dgChk(`c-${i}`))continue;
+    const date=dgVal(`c-date-${i}`);
+    if(!date)continue;
+    try{await sbUp('medical_appointments',{id:uid('apt'),date,specialty:dgVal(`c-spec-${i}`)||'outro',doctor:dgVal(`c-doc-${i}`)||null,hospital:dgVal(`c-hosp-${i}`)||null,notes:dgVal(`c-notes-${i}`)||null});saved++;}
+    catch(e){erros.push('Consulta '+i+': '+e.message);}
   }
-  for(const h of(ext.historico||[])){
-    if(!h.diagnosis)continue;
-    try{await sbUp('medical_history',{id:uid('hi'),date:h.date||today(),diagnosis:h.diagnosis,status:h.status||'ativo',source:h.source||'SNS',specialty:h.specialty||null,notes:h.notes||null});saved++;}
-    catch(e){erros.push('Historial: '+e.message);}
+  for(let i=0;i<nh;i++){
+    if(!dgChk(`h-${i}`))continue;
+    const diagnosis=dgVal(`h-diag-${i}`);
+    if(!diagnosis)continue;
+    try{await sbUp('medical_history',{id:uid('hi'),date:dgVal(`h-date-${i}`)||today(),diagnosis,status:dgVal(`h-stat-${i}`)||'ativo',source:'SNS',specialty:dgVal(`h-spec-${i}`)||null,notes:dgVal(`h-notes-${i}`)||null});saved++;}
+    catch(e){erros.push('Historial '+i+': '+e.message);}
   }
-  for(const m of(ext.medicacaoTemporaria||[])){
-    if(!m.name||!m.start_date)continue;
-    let end=m.end_date;
-    if(!end&&m.duration_days&&m.start_date){const d=new Date(m.start_date);d.setDate(d.getDate()+parseInt(m.duration_days)-1);end=d.toISOString().slice(0,10);}
-    try{await sbUp('medications_temporary',{id:uid('mt'),name:m.name,dose:m.dose||null,frequency:m.frequency||null,start_date:m.start_date,end_date:end||null,duration_days:m.duration_days||null,reason:m.reason||null,notes:m.notes||null});saved++;}
-    catch(e){erros.push('MedTemp: '+e.message);}
+  for(let i=0;i<nmt;i++){
+    if(!dgChk(`mt-${i}`))continue;
+    const name=dgVal(`mt-name-${i}`);
+    const start_date=dgVal(`mt-start-${i}`);
+    if(!name||!start_date)continue;
+    const dur=dgVal(`mt-dur-${i}`);
+    let end_date=null;
+    if(dur){const d=new Date(start_date);d.setDate(d.getDate()+parseInt(dur)-1);end_date=d.toISOString().slice(0,10);}
+    try{await sbUp('medications_temporary',{id:uid('mt'),name,dose:dgVal(`mt-dose-${i}`)||null,frequency:dgVal(`mt-freq-${i}`)||null,start_date,end_date,duration_days:dur?parseInt(dur):null,reason:dgVal(`mt-reason-${i}`)||null,notes:dgVal(`mt-notes-${i}`)||null});saved++;}
+    catch(e){erros.push('MedTemp '+i+': '+e.message);}
   }
-  for(const m of(ext.medicacaoCronica||[])){
-    if(!m.name)continue;
-    try{await sbUp('medications_baseline',{id:uid('mb'),name:m.name,dose:m.dose||null,frequency:m.frequency||null,device:m.device||null,notes:m.notes||null,active:true});saved++;}
-    catch(e){erros.push('MedBase: '+e.message);}
+  for(let i=0;i<nmb;i++){
+    if(!dgChk(`mb-${i}`))continue;
+    const name=dgVal(`mb-name-${i}`);
+    if(!name)continue;
+    try{await sbUp('medications_baseline',{id:uid('mb'),name,dose:dgVal(`mb-dose-${i}`)||null,frequency:dgVal(`mb-freq-${i}`)||null,device:dgVal(`mb-dev-${i}`)||null,notes:dgVal(`mb-notes-${i}`)||null,active:true});saved++;}
+    catch(e){erros.push('MedBase '+i+': '+e.message);}
   }
-  for(const ep of(ext.episodiosHospitalares||[])){
-    if(!ep.date_in||!ep.hospital)continue;
-    try{await sbUp('hospital_episodes',{id:uid('ep'),date_in:ep.date_in,date_out:ep.date_out||null,hospital:ep.hospital,service:ep.service||null,doctor:ep.doctor||null,episode_type:ep.episode_type||'outro',diagnosis:ep.diagnosis||null,notes:ep.notes||null});saved++;}
-    catch(e){erros.push('Ep: '+e.message);}
+  for(let i=0;i<nep;i++){
+    if(!dgChk(`ep-${i}`))continue;
+    const hospital=dgVal(`ep-hosp-${i}`);
+    const date_in=dgVal(`ep-in-${i}`);
+    if(!hospital||!date_in)continue;
+    try{await sbUp('hospital_episodes',{id:uid('ep'),date_in,date_out:dgVal(`ep-out-${i}`)||null,hospital,service:dgVal(`ep-serv-${i}`)||null,doctor:dgVal(`ep-doc-${i}`)||null,episode_type:dgVal(`ep-type-${i}`)||'outro',diagnosis:dgVal(`ep-diag-${i}`)||null,notes:dgVal(`ep-notes-${i}`)||null});saved++;}
+    catch(e){erros.push('Ep '+i+': '+e.message);}
   }
 
   pendingExtraction=null;
   await loadAll();
-  flash(saved>0?`${saved} registo(s) guardado(s)${erros.length?' ('+erros.length+' erro(s).)':''}. `:'Nenhum registo guardado.'+erros.join(' '),saved>0?(erros.length?'warn':'ok'):'err');
+  flash(saved>0?`${saved} registo(s) guardado(s)${erros.length?' · '+erros.length+' erro(s)':''}. `:'Nenhum registo guardado. '+erros.join(' '),saved>0?(erros.length?'warn':'ok'):'err');
   document.getElementById('dg-result').innerHTML='';
   document.getElementById('dg-preview').innerHTML='';
-  window._dgB64=null;
+  _dgPages=[];
 }
 
 // ─── IMPORTAR ─────────────────────────────────────────────────────────────────
